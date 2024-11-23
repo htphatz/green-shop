@@ -6,6 +6,7 @@ import com.dev.backend.service.AuthService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -23,6 +24,7 @@ public class JwtDecoderConfig implements JwtDecoder {
     private String signerKey;
 
     @Autowired
+    @Lazy
     private AuthService authService;
 
     private NimbusJwtDecoder nimbusJwtDecoder = null;
