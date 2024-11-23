@@ -36,8 +36,8 @@ public class CategoryServiceImpl implements CategoryService {
         if (request.getFileImage() != null && !request.getFileImage().isEmpty()) {
             Map data = this.cloudinaryService.upload(request.getFileImage());
             imageUrl = (String) data.get("secure_url");
+            category.setImageUrl(imageUrl);
         }
-        category.setImageUrl(imageUrl);
         return categoryMapper.toCategoryRes(categoryRepository.save(category));
     }
 

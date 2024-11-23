@@ -30,13 +30,13 @@ public class CategoryController {
         return APIResponse.<PageDto<CategoryRes>>builder().result(result).build();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public APIResponse<CategoryRes> getCategoryById(@PathVariable("id") String id) {
         CategoryRes result = categoryService.getCategoryById(id);
         return APIResponse.<CategoryRes>builder().result(result).build();
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<CategoryRes> updateCategory(@PathVariable("id") String id, CategoryReq request) {
         CategoryRes result = categoryService.updateCategory(id, request);
         return APIResponse.<CategoryRes>builder().result(result).build();
