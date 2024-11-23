@@ -8,6 +8,7 @@ public enum ErrorCode {
     USER_EXISTED(409, "User existed", HttpStatus.CONFLICT),
     ROLE_NOT_FOUND(404, "Role not found", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
+    CATEGORY_NOT_FOUND(404, "Category not found", HttpStatus.NOT_FOUND),
     PASSWORD_INVALID(400, "Password invalid", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED)
     ;

@@ -17,9 +17,12 @@ jwt:
   duration: 1 #hour
 
 cloudinary:
-  cloud_name: dcw5wq1ka
-  api_key: 228462159873377
-  api_secret: VOz0qy1Fh1TwwdqF5ZXjpytRVjY
+  cloud_name: drgidfvnd
+  api_key: 195446941243745
+  api_secret: 4RQj5g79A55YCQeybvBxXBTTIq8
+
+resource:
+  defaultImage: https://res.cloudinary.com/drgidfvnd/image/upload/v1712980751/samples/default-image.png
 
 springdoc:
   api-docs:
