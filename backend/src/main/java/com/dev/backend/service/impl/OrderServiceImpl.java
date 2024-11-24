@@ -2,6 +2,7 @@ package com.dev.backend.service.impl;
 
 import com.dev.backend.dto.request.ChangeOrderInfoReq;
 import com.dev.backend.dto.request.ChangeOrderStatusReq;
+import com.dev.backend.dto.request.OrderItemReq;
 import com.dev.backend.dto.request.OrderReq;
 import com.dev.backend.dto.response.OrderRes;
 import com.dev.backend.dto.response.PageDto;
@@ -27,6 +28,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -44,20 +49,30 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = orderMapper.toOrder(request);
         User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+        Order newOrder = orderRepository.save(order);
 
-        request.getOrderItems().stream().forEach(orderItemReq -> {
+        double totalMoneyOfOrder = 0D;
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (OrderItemReq orderItemReq : request.getOrderItems()) {
             OrderItem orderItem = orderItemMapper.toOrderItem(orderItemReq);
-            orderItem.setOrder(order);
+            orderItem.setOrder(newOrder);
             Product product = productRepository.findById(orderItemReq.getProductId())
-                            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
             orderItem.setProduct(product);
-            orderItemRepository.save(orderItem);
-        });
-        return orderMapper.toOrderRes(orderRepository.save(order));
+            orderItem.setPrice(product.getPrice());
+            double totalMoneyOfOrderItem = product.getPrice().doubleValue() * orderItemReq.getQuantity();
+            orderItem.setTotalMoney(BigDecimal.valueOf(totalMoneyOfOrderItem));
+            orderItems.add(orderItem);
+            totalMoneyOfOrder += totalMoneyOfOrderItem;
+        }
+        orderItemRepository.saveAll(orderItems);
+        newOrder.setTotalMoney(BigDecimal.valueOf(totalMoneyOfOrder));
+        return orderMapper.toOrderRes(orderRepository.save(newOrder));
     }
+
 
     @Override
     public OrderRes getOrderById(String id) {
@@ -78,8 +93,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderRes updateOrderStatus(String id, ChangeOrderStatusReq request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        order.setStatus(request.getOrderStatus());
-        return orderMapper.toOrderRes(order);
+        order.setStatus(request.getStatus());
+        return orderMapper.toOrderRes(orderRepository.save(order));
     }
 
     @Override
@@ -89,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
         order.setFullName(request.getFullName());
         order.setAddress(request.getAddress());
         order.setPhone(request.getPhone());
-        return orderMapper.toOrderRes(order);
+        return orderMapper.toOrderRes(orderRepository.save(order));
     }
 
     @Override

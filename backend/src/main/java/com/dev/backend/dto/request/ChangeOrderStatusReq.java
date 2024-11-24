@@ -10,5 +10,5 @@ import lombok.Getter;
 @Builder
 public class ChangeOrderStatusReq {
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    private OrderStatus status;
 }

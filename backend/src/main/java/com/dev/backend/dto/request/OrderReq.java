@@ -6,7 +6,6 @@ import jakarta.persistence.Enumerated;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -17,7 +16,6 @@ public class OrderReq {
     private String phone;
     private String address;
     private String note;
-    private BigDecimal totalMoney;
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
