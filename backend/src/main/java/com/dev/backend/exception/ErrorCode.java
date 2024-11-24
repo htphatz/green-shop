@@ -9,7 +9,8 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(404, "Role not found", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_FOUND(404, "Category not found", HttpStatus.NOT_FOUND),
-    PRODUCT_NOT_FOUND(404, "Category not found", HttpStatus.NOT_FOUND),
+    PRODUCT_NOT_FOUND(404, "Product not found", HttpStatus.NOT_FOUND),
+    ORDER_NOT_FOUND(404, "Order not found", HttpStatus.NOT_FOUND),
     PASSWORD_INVALID(400, "Password invalid", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED),
     QUANTITY_INVALID(400, "Quantity invalid", HttpStatus.BAD_REQUEST)
