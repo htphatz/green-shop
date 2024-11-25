@@ -6,21 +6,17 @@ import com.dev.backend.dto.request.OrderItemReq;
 import com.dev.backend.dto.request.OrderReq;
 import com.dev.backend.dto.response.OrderRes;
 import com.dev.backend.dto.response.PageDto;
-import com.dev.backend.entity.Order;
-import com.dev.backend.entity.OrderItem;
-import com.dev.backend.entity.Product;
-import com.dev.backend.entity.User;
+import com.dev.backend.entity.*;
+import com.dev.backend.enums.DiscountType;
 import com.dev.backend.enums.OrderStatus;
 import com.dev.backend.exception.AppException;
 import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.mapper.OrderItemMapper;
 import com.dev.backend.mapper.OrderMapper;
-import com.dev.backend.repository.OrderItemRepository;
-import com.dev.backend.repository.OrderRepository;
-import com.dev.backend.repository.ProductRepository;
-import com.dev.backend.repository.UserRepository;
+import com.dev.backend.repository.*;
 import com.dev.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final VoucherRepository voucherRepository;
     private final OrderItemMapper orderItemMapper;
     private final OrderMapper orderMapper;
 
@@ -68,7 +65,18 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
             totalMoneyOfOrder += totalMoneyOfOrderItem;
         }
+        if (Strings.isNotEmpty(request.getVoucherCode())) {
+            Voucher voucher = voucherRepository.findByCode(request.getVoucherCode())
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+            if (voucher.getDiscountType() == DiscountType.FIXED) {
+                totalMoneyOfOrder -= voucher.getDiscountValue();
+            }
+            else if (voucher.getDiscountType() == DiscountType.PERCENT) {
+                totalMoneyOfOrder = totalMoneyOfOrder * (1 - voucher.getDiscountValue() / 100);
+            }
+        }
         orderItemRepository.saveAll(orderItems);
+        totalMoneyOfOrder = Math.max(0, totalMoneyOfOrder);
         newOrder.setTotalMoney(BigDecimal.valueOf(totalMoneyOfOrder));
         return orderMapper.toOrderRes(orderRepository.save(newOrder));
     }

@@ -16,6 +16,7 @@ public class OrderReq {
     private String phone;
     private String address;
     private String note;
+    private String voucherCode;
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
