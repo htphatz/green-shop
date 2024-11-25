@@ -69,4 +69,10 @@ public class OrderController {
         PageDto<OrderRes> result = orderService.searchOrders(status, userId, pageNumber, pageSize);
         return APIResponse.<PageDto<OrderRes>>builder().result(result).build();
     }
+
+    @DeleteMapping("{id}")
+    public APIResponse<Void> deleteOrder(@PathVariable("id") String id) {
+        orderService.deleteOrder(id);
+        return APIResponse.<Void>builder().build();
+    }
 }

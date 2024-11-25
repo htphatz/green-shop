@@ -112,6 +112,9 @@ public class OrderServiceImpl implements OrderService {
     public OrderRes updateOrderStatus(String id, ChangeOrderStatusReq request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        if (request.getStatus() == OrderStatus.CANCELED) {
+            resetQuantity(order);
+        }
         order.setStatus(request.getStatus());
         return orderMapper.toOrderRes(orderRepository.save(order));
     }
@@ -135,6 +138,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public void deleteOrder(String id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        resetQuantity(order);
+        orderRepository.delete(order);
+    }
+
+    @Override
     public PageDto<OrderRes> getMyOrders(Integer pageNumber, Integer pageSize) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -145,5 +156,13 @@ public class OrderServiceImpl implements OrderService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Order> orders = orderRepository.findByUserId(user.getId(), pageable);
         return PageDto.of(orders).map(orderMapper::toOrderRes);
+    }
+
+    private void resetQuantity(Order order) {
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Product product = productRepository.findById(orderItem.getProduct().getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+            product.setSoldQuantity(product.getSoldQuantity() - orderItem.getQuantity());
+        }
     }
 }

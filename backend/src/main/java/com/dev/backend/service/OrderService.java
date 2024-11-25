@@ -15,4 +15,5 @@ public interface OrderService {
     OrderRes updateOrderInfo(String id, ChangeOrderInfoReq request);
     PageDto<OrderRes> getMyOrders(Integer pageNumber, Integer pageSize);
     PageDto<OrderRes> searchOrders(OrderStatus orderStatus, String userId, Integer pageNumber, Integer pageSize);
+    void deleteOrder(String id);
 }
