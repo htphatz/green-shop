@@ -16,7 +16,9 @@ public enum ErrorCode {
     VOUCHER_NOT_FOUND(404, "Voucher not found", HttpStatus.NOT_FOUND),
     PASSWORD_INVALID(400, "Password invalid", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED),
-    QUANTITY_INVALID(400, "Quantity invalid", HttpStatus.BAD_REQUEST)
+    QUANTITY_INVALID(400, "Quantity invalid", HttpStatus.BAD_REQUEST),
+    OUT_OF_STOCK(400, "Product is out of stock", HttpStatus.BAD_REQUEST),
+    VOUCHER_EXPIRED(400, "Voucher is expired", HttpStatus.BAD_REQUEST),
     ;
 
     private final Integer code;

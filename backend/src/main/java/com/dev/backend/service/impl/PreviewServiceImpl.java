@@ -18,6 +18,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,9 @@ public class PreviewServiceImpl implements PreviewService {
     public PreviewOrderItemRes previewOrderItem(PreviewOrderItemReq request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        if (product.getSoldQuantity() + request.getQuantity() > product.getQuantity()) {
+            throw new AppException(ErrorCode.OUT_OF_STOCK);
+        }
         double totalMoneyOfOrderItem = product.getPrice().doubleValue() * request.getQuantity();
         return PreviewOrderItemRes.builder()
                 .totalMoney(BigDecimal.valueOf(totalMoneyOfOrderItem))
@@ -41,12 +45,18 @@ public class PreviewServiceImpl implements PreviewService {
         for (OrderItemReq orderItemReq : request.getOrderItems()) {
             Product product = productRepository.findById(orderItemReq.getProductId())
                     .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+            if (product.getSoldQuantity() + orderItemReq.getQuantity() > product.getQuantity()) {
+                throw new AppException(ErrorCode.OUT_OF_STOCK);
+            }
             double totalMoneyOfOrderItem = product.getPrice().doubleValue() * orderItemReq.getQuantity();
             totalMoneyOfOrder += totalMoneyOfOrderItem;
         }
         if (Strings.isNotEmpty(request.getVoucherCode())) {
             Voucher voucher = voucherRepository.findByCode(request.getVoucherCode())
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+            if (voucher.getExpirationDate().isBefore(LocalDateTime.now())) {
+                throw new AppException(ErrorCode.VOUCHER_EXPIRED);
+            }
             if (voucher.getDiscountType() == DiscountType.FIXED) {
                 totalMoneyOfOrder -= voucher.getDiscountValue();
             }
