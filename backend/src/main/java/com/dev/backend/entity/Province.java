@@ -9,19 +9,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "invalidated_tokens")
+@Table(name = "provinces")
 @Entity
-public class InvalidatedToken {
+public class Province {
     @Id
     @Column(name = "id")
-    private String id;
+    private Integer id;
 
-    @Column(name = "expiration_time")
-    private Date expirationTime;
+    @Column(name = "slug")
+    private String slug;
+
+    @Column(name = "name")
+    private String name;
 }
