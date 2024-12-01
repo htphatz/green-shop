@@ -5,6 +5,7 @@ import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.ProductRes;
 import com.dev.backend.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public APIResponse<ProductRes> createProduct(ProductReq request) {
+    public APIResponse<ProductRes> createProduct(@Valid ProductReq request) {
         ProductRes result = productService.createProduct(request);
         return APIResponse.<ProductRes>builder().result(result).build();
     }
@@ -39,7 +40,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public APIResponse<ProductRes> updateCategory(@PathVariable("id") String id, ProductReq request) {
+    public APIResponse<ProductRes> updateCategory(@PathVariable("id") String id, @Valid ProductReq request) {
         ProductRes result = productService.updateProduct(id, request);
         return APIResponse.<ProductRes>builder().result(result).build();
     }

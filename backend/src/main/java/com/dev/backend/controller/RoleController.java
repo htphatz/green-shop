@@ -4,6 +4,7 @@ import com.dev.backend.dto.request.RoleReq;
 import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.RoleRes;
 import com.dev.backend.service.RoleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping
-    public APIResponse<RoleRes> createRole(@RequestBody RoleReq request) {
+    public APIResponse<RoleRes> createRole(@Valid @RequestBody RoleReq request) {
         RoleRes result = roleService.createRole(request);
         return APIResponse.<RoleRes>builder().result(result).build();
     }

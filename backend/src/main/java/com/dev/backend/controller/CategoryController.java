@@ -5,6 +5,7 @@ import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.CategoryRes;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public APIResponse<CategoryRes> createCategory(CategoryReq request) {
+    public APIResponse<CategoryRes> createCategory(@Valid CategoryReq request) {
         CategoryRes result = categoryService.createCategory(request);
         return APIResponse.<CategoryRes>builder().result(result).build();
     }
@@ -37,7 +38,7 @@ public class CategoryController {
     }
 
     @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public APIResponse<CategoryRes> updateCategory(@PathVariable("id") String id, CategoryReq request) {
+    public APIResponse<CategoryRes> updateCategory(@PathVariable("id") String id, @Valid CategoryReq request) {
         CategoryRes result = categoryService.updateCategory(id, request);
         return APIResponse.<CategoryRes>builder().result(result).build();
     }

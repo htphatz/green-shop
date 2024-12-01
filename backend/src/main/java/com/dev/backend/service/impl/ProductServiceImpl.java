@@ -40,6 +40,7 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(category);
         product.setSoldQuantity(0);
         String imageUrl = defaultImage;
+        product.setImageUrl(defaultImage);
         if (request.getFileImage() != null && !request.getFileImage().isEmpty()) {
             Map data = this.cloudinaryService.upload(request.getFileImage());
             imageUrl = (String) data.get("secure_url");

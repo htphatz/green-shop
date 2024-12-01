@@ -5,6 +5,7 @@ import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.VoucherRes;
 import com.dev.backend.service.VoucherService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ public class VoucherController {
     private final VoucherService voucherService;
 
     @PostMapping
-    public APIResponse<VoucherRes> createVoucher(@RequestBody VoucherReq request) {
+    public APIResponse<VoucherRes> createVoucher(@Valid @RequestBody VoucherReq request) {
         VoucherRes result = voucherService.createVoucher(request);
         return APIResponse.<VoucherRes>builder().result(result).build();
     }
@@ -36,7 +37,7 @@ public class VoucherController {
     }
 
     @PutMapping("{code}")
-    public APIResponse<VoucherRes> updateVoucher(@PathVariable("code") String code,@RequestBody VoucherReq request) {
+    public APIResponse<VoucherRes> updateVoucher(@PathVariable("code") String code, @Valid @RequestBody VoucherReq request) {
         VoucherRes result = voucherService.updateVoucher(code, request);
         return APIResponse.<VoucherRes>builder().result(result).build();
     }
