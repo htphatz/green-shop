@@ -38,6 +38,12 @@ public class AuthController {
         return APIResponse.<LoginRes>builder().result(result).build();
     }
 
+    @PostMapping("loginWithRedis")
+    public APIResponse<LoginRes> loginWithRedis(@Valid @RequestBody LoginReq request) throws KeyLengthException {
+        LoginRes result = authService.loginWithRedis(request);
+        return APIResponse.<LoginRes>builder().result(result).build();
+    }
+
     @PostMapping("introspect")
     public APIResponse<IntrospectRes> introspect(@Valid @RequestBody IntrospectReq request) throws ParseException, JOSEException {
         IntrospectRes result = authService.introspect(request);

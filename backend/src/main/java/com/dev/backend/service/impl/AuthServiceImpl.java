@@ -42,8 +42,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final BaseRedisServiceImpl<String, String, Object> baseRedisService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+
+    private static final String FAILED_LOGIN_PREFIX = "failed_login";
+    private static final String BLOCKED_PREFIX = "blocked";
+    private static final int MAX_FAILED_LOGIN = 10;
+    private static final long LOGIN_TIMEOUT_MINUTES = 2;
+    private static final long LOCK_TIME_MINUTES = 10;
 
     @Value(value = "${jwt.signerKey}")
     String signerKey;
@@ -79,6 +86,38 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
+        String token = generateToken(existingUser);
+        return LoginRes.builder().token(token).build();
+    }
+
+    @Override
+    public LoginRes loginWithRedis(LoginReq request) throws KeyLengthException {
+        String fieldKey = FAILED_LOGIN_PREFIX;
+        int failedLoginQuantity;
+        User existingUser = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (baseRedisService.hashExists(existingUser.getId(), BLOCKED_PREFIX)) {
+            throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+        if (!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
+            if (baseRedisService.hashExists(existingUser.getId(), fieldKey)) {
+                failedLoginQuantity = (int) baseRedisService.hashGet(existingUser.getId(), fieldKey) + 1;
+            } else {
+                failedLoginQuantity = 1;
+            }
+            baseRedisService.hashSet(existingUser.getId(), fieldKey, failedLoginQuantity);
+            if (failedLoginQuantity >= MAX_FAILED_LOGIN) {
+                baseRedisService.setTimeToLive(existingUser.getId(), LOCK_TIME_MINUTES);
+                baseRedisService.hashSet(existingUser.getId(), BLOCKED_PREFIX, true);
+                throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+            }
+            throw new AppException(ErrorCode.PASSWORD_INVALID);
+        }
+        // Đăng nhập thành công
+        baseRedisService.delete(existingUser.getId(), fieldKey);
+        baseRedisService.delete(existingUser.getId(), "locked");
+        baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
         String token = generateToken(existingUser);
         return LoginRes.builder().token(token).build();
     }

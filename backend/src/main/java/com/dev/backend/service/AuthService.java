@@ -15,6 +15,7 @@ import java.text.ParseException;
 public interface AuthService {
     UserRes register(RegisterReq request);
     LoginRes login(LoginReq request) throws KeyLengthException;
+    LoginRes loginWithRedis(LoginReq request) throws KeyLengthException;
     IntrospectRes introspect(IntrospectReq request) throws JOSEException, ParseException;
     void logout(LogoutReq request) throws ParseException, JOSEException;
 }

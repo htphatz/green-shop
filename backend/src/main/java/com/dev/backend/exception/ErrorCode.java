@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
     USER_EXISTED(409, "User existed", HttpStatus.CONFLICT),
+    ACCOUNT_BLOCKED(100000, "Account blocked", HttpStatus.UNAUTHORIZED),
     VOUCHER_EXISTED(409, "Voucher existed", HttpStatus.CONFLICT),
     ROLE_NOT_FOUND(404, "Role not found", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
