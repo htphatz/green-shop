@@ -1,9 +1,6 @@
 package com.dev.backend.service.impl;
 
-import com.dev.backend.dto.request.IntrospectReq;
-import com.dev.backend.dto.request.LoginReq;
-import com.dev.backend.dto.request.LogoutReq;
-import com.dev.backend.dto.request.RegisterReq;
+import com.dev.backend.dto.request.*;
 import com.dev.backend.dto.response.IntrospectRes;
 import com.dev.backend.dto.response.LoginRes;
 import com.dev.backend.dto.response.UserRes;
@@ -16,6 +13,8 @@ import com.dev.backend.mapper.UserMapper;
 import com.dev.backend.repository.InvalidatedTokenRepository;
 import com.dev.backend.repository.RoleRepository;
 import com.dev.backend.repository.UserRepository;
+import com.dev.backend.repository.httpclient.OutboundIdentityClient;
+import com.dev.backend.repository.httpclient.OutboundUserClient;
 import com.dev.backend.service.AuthService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -42,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final OutboundIdentityClient outboundIdentityClient;
+    private final OutboundUserClient outboundUserClient;
     private final BaseRedisServiceImpl<String, String, Object> baseRedisService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -53,10 +54,22 @@ public class AuthServiceImpl implements AuthService {
     private static final long LOCK_TIME_MINUTES = 10;
 
     @Value(value = "${jwt.signerKey}")
-    String signerKey;
+    private String signerKey;
 
     @Value(value = "${jwt.duration}")
-    int duration;
+    private int duration;
+
+    @Value("${outbound.identity.client-id}")
+    private String clientId;
+
+    @Value("${outbound.identity.client-secret}")
+    private String clientSecret;
+
+    @Value("${outbound.identity.redirect-uri}")
+    private String redirectUri;
+
+    @Value("${outbound.identity.grant-type}")
+    private String grantType;
 
     @Override
     public UserRes register(RegisterReq request) {
@@ -119,6 +132,39 @@ public class AuthServiceImpl implements AuthService {
         baseRedisService.delete(existingUser.getId(), "locked");
         baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
         String token = generateToken(existingUser);
+        return LoginRes.builder().token(token).build();
+    }
+
+    @Override
+    public LoginRes loginOutbound(String code) throws KeyLengthException {
+        // Exchange code
+        ExchangeCodeReq request = ExchangeCodeReq.builder()
+                .code(code)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .redirectUri(redirectUri)
+                .grantType(grantType)
+                .build();
+        var response = outboundIdentityClient.exchangeCode(request);
+        log.info("TOKEN RESPONSE {}", response);
+
+        // Get user info
+        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
+        log.info("User Info {}", userInfo);
+
+        // Onboard user
+        Set<Role> roles = new HashSet<>();
+        roleRepository.findById(Role.USER).ifPresent(roles::add);
+        var user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
+                () -> userRepository.save(User.builder()
+                        .email(userInfo.getEmail())
+                        .firstName(userInfo.getGivenName())
+                        .lastName(userInfo.getFamilyName())
+                        .roles(roles)
+                        .build()));
+
+        // Generate token;
+        var token = generateToken(user);
         return LoginRes.builder().token(token).build();
     }
 

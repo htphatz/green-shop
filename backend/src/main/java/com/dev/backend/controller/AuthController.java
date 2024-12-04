@@ -13,10 +13,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -41,6 +38,12 @@ public class AuthController {
     @PostMapping("loginWithRedis")
     public APIResponse<LoginRes> loginWithRedis(@Valid @RequestBody LoginReq request) throws KeyLengthException {
         LoginRes result = authService.loginWithRedis(request);
+        return APIResponse.<LoginRes>builder().result(result).build();
+    }
+
+    @PostMapping("outbound/login")
+    public APIResponse<LoginRes> outboundLogin(@Valid @RequestParam String code) throws KeyLengthException {
+        LoginRes result = authService.loginOutbound(code);
         return APIResponse.<LoginRes>builder().result(result).build();
     }
 

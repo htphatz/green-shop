@@ -24,6 +24,13 @@ cloudinary:
   api_key: 195446941243745
   api_secret: 4RQj5g79A55YCQeybvBxXBTTIq8
 
+outbound:
+  identity:
+    client-id: 726980649628-lp3bilg5elg8bma1cpqkgi6jbimgc40r.apps.googleusercontent.com
+    client-secret: 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
+    redirect-uri: http://localhost:3000/authenticate
+    grant-type: authorization_code
+
 resource:
   defaultImage: https://res.cloudinary.com/drgidfvnd/image/upload/v1712980751/samples/default-image.png
 
