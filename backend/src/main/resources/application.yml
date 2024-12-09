@@ -45,15 +45,19 @@ open:
     title: API Documents
     version: v1.0.0
     description: APIs docs for Green Shop website
-    serverUrl: http://localhost:8080/
+    serverUrl: ${API_SERVER_URL:http://localhost:8080}
     serverDescription: local
 
 payment:
   vnpay:
     pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-    return-url: http://localhost:8080/payment/vn-pay-callback
+    return-url: ${PAYMENT_RETURN_URL:http://localhost:8080/payment/vn-pay-callback}
     tmn-code: 1BPJTK72
     secret-key: WBKCQ8ZMK4WYHLH96QQCTU33ZTQLING7
     version: 2.1.0
     command: pay
     order-type: other
+
+ghn:
+  token: eb76026d-b64c-11ef-81b6-5e2e958f07fa
+  shop-id: 5512864
