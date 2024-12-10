@@ -13,6 +13,8 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -20,6 +22,7 @@ import java.text.ParseException;
 @RestController
 @RequestMapping("auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
     private final AuthService authService;
 
@@ -57,5 +60,10 @@ public class AuthController {
     public APIResponse<Void> logout(@Valid @RequestBody LogoutReq request) throws ParseException, JOSEException {
         authService.logout(request);
         return APIResponse.<Void>builder().build();
+    }
+
+    @KafkaListener(topics = "TEST")
+    public void listenKafka(String firstName) {
+        log.info("Hello " + firstName);
     }
 }
