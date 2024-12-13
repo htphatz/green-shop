@@ -6,9 +6,10 @@ import com.dev.backend.dto.request.OrderReq;
 import com.dev.backend.dto.response.OrderRes;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.enums.OrderStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface OrderService {
-    OrderRes createOrder(OrderReq request);
+    OrderRes createOrder(OrderReq request) throws JsonProcessingException;
     OrderRes getOrderById(String id) ;
     PageDto<OrderRes> getAllOrders(Integer pageNumber, Integer pageSize);
     OrderRes updateOrderStatus(String id, ChangeOrderStatusReq status);

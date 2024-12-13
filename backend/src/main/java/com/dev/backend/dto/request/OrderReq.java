@@ -4,6 +4,7 @@ import com.dev.backend.enums.PaymentMethod;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,10 +28,10 @@ public class OrderReq {
     private String note;
     private String voucherCode;
 
-    @NotBlank(message = "Payment method is required")
+    @NotNull(message = "Payment method is required")
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
-    @NotBlank(message = "Order items is required")
+    @NotNull(message = "Order items is required")
     private List<OrderItemReq> orderItems;
 }

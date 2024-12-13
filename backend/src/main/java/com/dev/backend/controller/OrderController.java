@@ -8,6 +8,7 @@ import com.dev.backend.dto.response.OrderRes;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.enums.OrderStatus;
 import com.dev.backend.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public APIResponse<OrderRes> createOrder(@Valid @RequestBody OrderReq request) {
+    public APIResponse<OrderRes> createOrder(@Valid @RequestBody OrderReq request) throws JsonProcessingException {
         OrderRes result = orderService.createOrder(request);
         return APIResponse.<OrderRes>builder().result(result).build();
     }

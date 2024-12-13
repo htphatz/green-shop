@@ -10,6 +10,7 @@ import com.dev.backend.exception.AppException;
 import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.payment.vnpay.VNPayService;
 import com.dev.backend.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class PaymentController {
     private final OrderService orderService;
 
     @GetMapping("pay")
-    public APIResponse<?> pay(@RequestBody OrderReq request) {
+    public APIResponse<?> pay(@RequestBody OrderReq request) throws JsonProcessingException {
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
             OrderRes result = orderService.createOrder(request);
             return APIResponse.<OrderRes>builder().result(result).build();

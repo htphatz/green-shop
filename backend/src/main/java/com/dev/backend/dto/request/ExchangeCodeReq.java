@@ -9,21 +9,21 @@ import lombok.Getter;
 @Builder
 public class ExchangeCodeReq {
     @NotBlank(message = "Code is required")
-    String code;
+    private String code;
 
     @NotBlank(message = "Client's ID is required")
     @JsonProperty("client_id")
-    String clientId;
+    private String clientId;
 
     @NotBlank(message = "Client secret is required")
     @JsonProperty("client_secret")
-    String clientSecret;
+    private String clientSecret;
 
     @NotBlank(message = "Redirect uri is required")
     @JsonProperty("redirect_uri")
-    String redirectUri;
+    private String redirectUri;
 
     @NotBlank(message = "Grant type is required")
     @JsonProperty("grant_type")
-    String grantType;
+    private String grantType;
 }

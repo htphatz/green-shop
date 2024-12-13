@@ -1,5 +1,6 @@
 package com.dev.backend.service.impl;
 
+import com.dev.backend.dto.event.UpdateInventoryEvent;
 import com.dev.backend.dto.request.ChangeOrderInfoReq;
 import com.dev.backend.dto.request.ChangeOrderStatusReq;
 import com.dev.backend.dto.request.OrderItemReq;
@@ -15,11 +16,14 @@ import com.dev.backend.mapper.OrderItemMapper;
 import com.dev.backend.mapper.OrderMapper;
 import com.dev.backend.repository.*;
 import com.dev.backend.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,9 +43,11 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherRepository voucherRepository;
     private final OrderItemMapper orderItemMapper;
     private final OrderMapper orderMapper;
+    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public OrderRes createOrder(OrderReq request) {
+    public OrderRes createOrder(OrderReq request) throws JsonProcessingException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
@@ -50,6 +56,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderMapper.toOrder(request);
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+
+        // Khai báo event cho Kafka
+//        List<UpdateInventoryEvent> events = new ArrayList<>();
 
         double totalMoneyOfOrder = 0D;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -69,6 +78,13 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
             totalMoneyOfOrder += totalMoneyOfOrderItem;
             product.setSoldQuantity(product.getSoldQuantity() + orderItemReq.getQuantity());
+
+            // Tạo event cho Kafka
+//            UpdateInventoryEvent event = UpdateInventoryEvent.builder()
+//                    .productId(product.getId())
+//                    .soldQuantity(orderItem.getQuantity())
+//                    .build();
+//            events.add(event);
         }
 
         if (Strings.isNotEmpty(request.getVoucherCode())) {
@@ -89,6 +105,10 @@ public class OrderServiceImpl implements OrderService {
         Order newOrder = orderRepository.save(order);
         orderItemRepository.saveAll(orderItems);
         productRepository.saveAll(orderItems.stream().map(OrderItem::getProduct).toList());
+
+        // Gửi event cho Kafka
+//        kafkaTemplate.send("order-events", objectMapper.writeValueAsString(events));
+
         return orderMapper.toOrderRes(newOrder);
     }
 

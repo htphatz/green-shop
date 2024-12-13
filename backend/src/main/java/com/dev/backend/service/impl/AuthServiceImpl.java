@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -47,7 +46,6 @@ public class AuthServiceImpl implements AuthService {
     private final BaseRedisServiceImpl<String, String, Object> baseRedisService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     private static final String FAILED_LOGIN_PREFIX = "failed_login";
     private static final String BLOCKED_PREFIX = "blocked";
@@ -81,9 +79,6 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
-
-        // Test Kafka
-        kafkaTemplate.send("TEST", request.getFirstName());
 
         Set<Role> roles = new HashSet<>();
         roleRepository.findById(Role.USER).ifPresent(roles::add);

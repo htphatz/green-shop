@@ -12,6 +12,7 @@ import com.dev.backend.payment.PaymentDto;
 import com.dev.backend.repository.ProductRepository;
 import com.dev.backend.repository.VoucherRepository;
 import com.dev.backend.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class VNPayService {
     private final VoucherRepository voucherRepository;
     private final OrderService orderService;
 
-    public PaymentDto createVnPayPayment(OrderReq request) {
+    public PaymentDto createVnPayPayment(OrderReq request) throws JsonProcessingException {
         OrderRes order = orderService.createOrder(request);
         Long amount = calculateAmount(request) * 100L;
         Map<String, String> vnpParamsMap = vnPayConfig.getVNPayConfig();
