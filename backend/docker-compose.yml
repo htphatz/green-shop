@@ -25,7 +25,26 @@ services:
       - '6379:6379'
     networks:
       - default-network
-
+  elasticsearch:
+    image: 'elasticsearch:8.15.5'
+    container_name: elasticsearch
+    ports:
+      - '9200:9200'
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    networks:
+      - default-network
+  kibana:
+    image: 'kibana:8.15.5'
+    container_name: kibana
+    hostname: kibana
+    ports:
+      - '5601:5601'
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - default-network
 networks:
   default-network:
     driver: bridge

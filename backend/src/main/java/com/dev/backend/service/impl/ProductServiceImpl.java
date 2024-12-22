@@ -46,7 +46,8 @@ public class ProductServiceImpl implements ProductService {
             imageUrl = (String) data.get("secure_url");
             product.setImageUrl(imageUrl);
         }
-        return productMapper.toProductRes(productRepository.save(product));
+        Product newProduct = productRepository.save(product);
+        return productMapper.toProductRes(newProduct);
     }
 
     @Override
