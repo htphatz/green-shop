@@ -20,12 +20,12 @@ spring:
     bootstrap-servers: localhost:9094
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
       group-id: my-group
       auto-offset-reset: earliest
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.trusted.packages: "*"
 
@@ -75,3 +75,7 @@ payment:
 ghn:
   token: eb76026d-b64c-11ef-81b6-5e2e958f07fa
   shop-id: 5512864
+
+brevo:
+  api-key: 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
+  template-id: 1

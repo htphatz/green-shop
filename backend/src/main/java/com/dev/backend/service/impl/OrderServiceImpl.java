@@ -1,5 +1,6 @@
 package com.dev.backend.service.impl;
 
+import com.dev.backend.dto.event.OrderConfirmEvent;
 import com.dev.backend.dto.event.UpdateInventoryEvent;
 import com.dev.backend.dto.request.ChangeOrderInfoReq;
 import com.dev.backend.dto.request.ChangeOrderStatusReq;
@@ -108,6 +109,15 @@ public class OrderServiceImpl implements OrderService {
 
         // Gửi event cho Kafka
 //        kafkaTemplate.send("order-events", objectMapper.writeValueAsString(events));
+
+
+        // Brevo + Kafka
+        OrderConfirmEvent orderConfirmEvent = OrderConfirmEvent.builder()
+                .orderId(newOrder.getId())
+                .email(email)
+                .build();
+        kafkaTemplate.send("order-confirmed", orderConfirmEvent);
+        /////////////////
 
         return orderMapper.toOrderRes(newOrder);
     }
