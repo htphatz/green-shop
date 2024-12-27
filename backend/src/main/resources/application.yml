@@ -46,7 +46,7 @@ outbound:
     grant-type: authorization_code
 
 resource:
-  defaultImage: https://res.cloudinary.com/drgidfvnd/image/upload/v1712980751/samples/default-image.png
+  defaultImage: https://res.cloudinary.com/drgidfvnd/image/upload/v1735303638/no-image.webp
 
 springdoc:
   api-docs:

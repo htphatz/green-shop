@@ -12,8 +12,8 @@ import java.util.List;
 @Repository
 public interface EsProductRepository extends ElasticsearchRepository<EsProduct, String> {
     @Query("{\"bool\": { \"should\": [ " +
-            "{\"match\": {\"name\": {\"query\": \"?0\", \"fuzziness\": \"AUTO\", \"minimum_should_match\": \"30%\"}}}," +
-            "{\"match\": {\"description\": {\"query\": \"?1\", \"fuzziness\": \"AUTO\", \"minimum_should_match\": \"30%\"}}}" +
+            "{\"match\": {\"name\": {\"query\": \":name\", \"fuzziness\": \"AUTO\", \"minimum_should_match\": \"30%\"}}}," +
+            "{\"match\": {\"description\": {\"query\": \":description\", \"fuzziness\": \"AUTO\", \"minimum_should_match\": \"30%\"}}}" +
             "]}}")
     List<EsProduct> findByNameOrDescriptionCustom(String name, String description);
 
