@@ -36,12 +36,12 @@ jwt:
 cloudinary:
   cloud_name: drgidfvnd
   api_key: 195446941243745
-  api_secret: 4RQj5g79A55YCQeybvBxXBTTIq8
+  api_secret: ${API_SECRET_CLOUDINARY}
 
 outbound:
   identity:
     client-id: 726980649628-lp3bilg5elg8bma1cpqkgi6jbimgc40r.apps.googleusercontent.com
-    client-secret: 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
+    client-secret: ${CLIENT_SECRET_GOOGLE}
     redirect-uri: http://localhost:3000/authenticate
     grant-type: authorization_code
 
@@ -67,15 +67,15 @@ payment:
     pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
     return-url: ${PAYMENT_RETURN_URL:http://localhost:8080/payment/vn-pay-callback}
     tmn-code: 1BPJTK72
-    secret-key: WBKCQ8ZMK4WYHLH96QQCTU33ZTQLING7
+    secret-key: ${SECRET_KEY_VNPAY}
     version: 2.1.0
     command: pay
     order-type: other
 
 ghn:
-  token: eb76026d-b64c-11ef-81b6-5e2e958f07fa
+  token: ${TOKEN_GHN}
   shop-id: 5512864
 
 brevo:
-  api-key: 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
+  api-key: ${API_KEY_BREVO}
   template-id: 1
