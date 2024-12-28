@@ -1,6 +1,28 @@
-version: "3"
+version: "3.8"
 
 services:
+#  app:
+#    image: 'app:v1'
+#    container_name: app
+#    hostname: app
+#    restart: on-failure
+#    ports:
+#      - '8081:8080'
+#    environment:
+#      - TZ=Asia/Ho_Chi_Minh
+#      - DBMS_CONNECTION=${DBMS_CONNECTION}
+#      - ELASTICSEARCH_URIS=http://elasticsearch:9200
+#      - KAFKA_SERVER=kafka:9094
+#      - API_SECRET_CLOUDINARY=${API_SECRET_CLOUDINARY}
+#      - CLIENT_SECRET_GOOGLE=${CLIENT_SECRET_GOOGLE}
+#      - SECRET_KEY_VNPAY=${SECRET_KEY_VNPAY}
+#      - TOKEN_GHN=${TOKEN_GHN}
+#      - API_KEY_BREVO=${API_KEY_BREVO}
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#      - /etc/timezone:/etc/timezone:ro
+#    networks:
+#      - default-network
   kafka:
     image: 'bitnami/kafka:3.8'
     container_name: kafka
@@ -28,6 +50,7 @@ services:
   elasticsearch:
     image: 'elasticsearch:8.15.5'
     container_name: elasticsearch
+    hostname: elasticsearch
     ports:
       - '9200:9200'
     environment:

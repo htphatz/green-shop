@@ -12,12 +12,12 @@ spring:
       ddl-auto: none
     show-sql: true
   elasticsearch:
-    uris: http://localhost:9200
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
   kafka:
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: ${KAFKA_SERVER:localhost:9094}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
