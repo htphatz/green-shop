@@ -50,4 +50,15 @@ public class ProductController {
         productService.deleteProduct(id);
         return APIResponse.<Void>builder().build();
     }
+
+    @GetMapping(value = "search-by-custom-query")
+    public APIResponse<PageDto<ProductRes>> searchByCustomQuery(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
+    ) {
+        PageDto<ProductRes> result = productService.searchByCustomQuery(pageNumber, pageSize, sortBy, keyword);
+        return APIResponse.<PageDto<ProductRes>>builder().result(result).build();
+    }
 }

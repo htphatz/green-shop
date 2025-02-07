@@ -10,6 +10,7 @@ import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.mapper.ProductMapper;
 import com.dev.backend.repository.CategoryRepository;
 import com.dev.backend.repository.ProductRepository;
+import com.dev.backend.repository.SearchRepository;
 import com.dev.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,12 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final SearchRepository searchRepository;
     private final CloudinaryService cloudinaryService;
     private final ProductMapper productMapper;
 
@@ -95,5 +98,11 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
+    }
+
+    @Override
+    public PageDto<ProductRes> searchByCustomQuery(Integer pageNumber, Integer pageSize, String sortBy, String keyword) {
+        Page<Product> products = searchRepository.searchByCustomQuery(pageNumber, pageSize, sortBy, keyword);
+        return PageDto.of(products).map(productMapper::toProductRes);
     }
 }
