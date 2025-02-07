@@ -11,4 +11,5 @@ public interface ProductService {
     PageDto<ProductRes> searchProducts(String keyword, String categoryId, Integer pageNumber, Integer pageSize);
     void deleteProduct(String id);
     PageDto<ProductRes> searchByCustomQuery(Integer pageNumber, Integer pageSize, String sortBy, String keyword);
+    PageDto<ProductRes> searchByCriteria(Integer pageNumber, Integer pageSize, String sortBy, String categoryId, String... search);
 }

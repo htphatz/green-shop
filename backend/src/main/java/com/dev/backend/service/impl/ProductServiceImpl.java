@@ -105,4 +105,10 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> products = searchRepository.searchByCustomQuery(pageNumber, pageSize, sortBy, keyword);
         return PageDto.of(products).map(productMapper::toProductRes);
     }
+
+    @Override
+    public PageDto<ProductRes> searchByCriteria(Integer pageNumber, Integer pageSize, String sortBy, String categoryId, String... search) {
+        Page<Product> products = searchRepository.searchByCriteria(pageNumber, pageSize, sortBy, categoryId, search);
+        return PageDto.of(products).map(productMapper::toProductRes);
+    }
 }

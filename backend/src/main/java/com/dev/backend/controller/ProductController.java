@@ -61,4 +61,16 @@ public class ProductController {
         PageDto<ProductRes> result = productService.searchByCustomQuery(pageNumber, pageSize, sortBy, keyword);
         return APIResponse.<PageDto<ProductRes>>builder().result(result).build();
     }
+
+    @GetMapping(value = "search-by-criteria")
+    public APIResponse<PageDto<ProductRes>> searchByCriteria(
+            @RequestParam(name = "keyword", required = false) String[] search,
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
+    ) {
+        PageDto<ProductRes> result = productService.searchByCriteria(pageNumber, pageSize, sortBy, category, search);
+        return APIResponse.<PageDto<ProductRes>>builder().result(result).build();
+    }
 }
