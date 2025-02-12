@@ -106,6 +106,8 @@ public class AuthServiceImpl implements AuthService {
         }
         String accessToken = generateAccessToken(existingUser);
         String refreshToken = generateRefreshToken(existingUser);
+        existingUser.setRefreshToken(refreshToken);
+        userRepository.save(existingUser);
         return LoginRes.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -140,8 +142,12 @@ public class AuthServiceImpl implements AuthService {
         baseRedisService.delete(existingUser.getId(), fieldKey);
         baseRedisService.delete(existingUser.getId(), "locked");
         baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
-        String token = generateAccessToken(existingUser);
-        return LoginRes.builder().accessToken(token).build();
+        String accessToken = generateAccessToken(existingUser);
+        String refreshToken = generateRefreshToken(existingUser);
+        return LoginRes.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Override
@@ -191,19 +197,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(LogoutReq request) throws ParseException, JOSEException {
-        try {
-            SignedJWT signedJWT = verifyToken(request.getToken());
-            String jit = signedJWT.getJWTClaimsSet().getJWTID();
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        String email = extractEmail(request.getToken());
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+//        try {
+//            SignedJWT signedJWT = verifyToken(request.getToken());
+//            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+//            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+//
+//            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+//                    .id(jwtId)
+//                    .expirationTime(expirationTime)
+//                    .build();
+//            invalidatedTokenRepository.save(invalidatedToken);
+//        } catch (AppException exception) {
+//            log.info("Token already expired");
+//        }
+        user.setRefreshToken(null);
+        userRepository.save(user);
 
-            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                    .id(jit)
-                    .expirationTime(expirationTime)
-                    .build();
-            invalidatedTokenRepository.save(invalidatedToken);
-        } catch (AppException exception) {
-            log.info("Token already expired");
-        }
+        // Thêm token vào Blacklist
+        SignedJWT signedJWT = verifyToken(request.getToken());
+        String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+        baseRedisService.set(jwtId, request.getToken());
+        baseRedisService.setTimeToLive(jwtId, refreshDuration * 60L);
     }
 
     @Override
@@ -214,6 +231,11 @@ public class AuthServiceImpl implements AuthService {
         String email = extractEmail(request.getToken());
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Kiểm tra còn tồn tại Refresh token và so sánh với token đã lưu trong database
+        if(!Objects.equals(request.getToken(), user.getRefreshToken()) || !StringUtils.hasLength(user.getRefreshToken()))
+            throw new AppException(ErrorCode.REFRESH_TOKEN_INVALID);
+
         try {
             SignedJWT token = verifyToken(request.getToken());
             if (!token.verify(new MACVerifier(signerKey))) {
@@ -298,23 +320,30 @@ public class AuthServiceImpl implements AuthService {
 
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
-
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         Date expirationDate = signedJWT.getJWTClaimsSet().getExpirationTime();
-
+        String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
         boolean verified = signedJWT.verify(verifier);
 
-        // Kiếm tra thời hạn và chữ ký
+        // Kiểm tra Blacklist chứa Token không
+        String value = (String) baseRedisService.get(jwtId);
+        if (StringUtils.hasLength(value)) {
+            throw new AppException(ErrorCode.TOKEN_BLACK_LIST);
+        }
+
         if (!(verified && expirationDate.after(new Date()))) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.TOKEN_INVALID);
         }
 
+        // Kiếm tra thời hạn và chữ ký
+        // if (!(verified && expirationDate.after(new Date()))) {
+        //    throw new AppException(ErrorCode.UNAUTHORIZED);
+        //}
         // Kiểm tra đã logout chưa (logout tức là token đã nằm trong bảng invalidated_tokens)
-        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
+        // if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+        //    throw new AppException(ErrorCode.UNAUTHORIZED);
+        //}
         return signedJWT;
     }
 

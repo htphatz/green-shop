@@ -26,6 +26,7 @@ public enum ErrorCode {
     PAYMENT_INVALID(400, "Payment invalid", HttpStatus.BAD_REQUEST),
     TOKEN_INVALID(400, "Token invalid", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_INVALID(400, "Refresh token invalid", HttpStatus.BAD_REQUEST),
+    TOKEN_BLACK_LIST(400, "Token in blacklist", HttpStatus.BAD_REQUEST),
     ;
 
     private final Integer code;
