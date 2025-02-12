@@ -3,6 +3,7 @@ package com.dev.backend.service.impl;
 import com.dev.backend.dto.request.*;
 import com.dev.backend.dto.response.IntrospectRes;
 import com.dev.backend.dto.response.LoginRes;
+import com.dev.backend.dto.response.RefreshTokenRes;
 import com.dev.backend.dto.response.UserRes;
 import com.dev.backend.entity.InvalidatedToken;
 import com.dev.backend.entity.Role;
@@ -28,6 +29,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -58,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Value(value = "${jwt.duration}")
     private int duration;
+
+    @Value(value = "${jwt.refresh-duration}")
+    private int refreshDuration;
 
     @Value("${outbound.identity.client-id}")
     private String clientId;
@@ -99,8 +104,12 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
-        String token = generateToken(existingUser);
-        return LoginRes.builder().token(token).build();
+        String accessToken = generateAccessToken(existingUser);
+        String refreshToken = generateRefreshToken(existingUser);
+        return LoginRes.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Override
@@ -131,8 +140,8 @@ public class AuthServiceImpl implements AuthService {
         baseRedisService.delete(existingUser.getId(), fieldKey);
         baseRedisService.delete(existingUser.getId(), "locked");
         baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
-        String token = generateToken(existingUser);
-        return LoginRes.builder().token(token).build();
+        String token = generateAccessToken(existingUser);
+        return LoginRes.builder().accessToken(token).build();
     }
 
     @Override
@@ -164,8 +173,8 @@ public class AuthServiceImpl implements AuthService {
                         .build()));
 
         // Generate token;
-        var token = generateToken(user);
-        return LoginRes.builder().token(token).build();
+        var token = generateAccessToken(user);
+        return LoginRes.builder().accessToken(token).build();
     }
 
     @Override
@@ -197,7 +206,30 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private String generateToken(User user) throws KeyLengthException {
+    @Override
+    public RefreshTokenRes refreshToken(RefreshTokenReq request) {
+        if (!StringUtils.hasLength(request.getToken())) {
+            throw new AppException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+        String email = extractEmail(request.getToken());
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        try {
+            SignedJWT token = verifyToken(request.getToken());
+            if (!token.verify(new MACVerifier(signerKey))) {
+                throw new AppException(ErrorCode.REFRESH_TOKEN_INVALID);
+            }
+            String accessToken = generateAccessToken(user);
+            return RefreshTokenRes.builder()
+                    .accessToken(accessToken)
+                    .userId(user.getId())
+                    .build();
+        } catch (ParseException | JOSEException e) {
+            throw new AppException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+    }
+
+    private String generateAccessToken(User user) throws KeyLengthException {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -209,6 +241,31 @@ public class AuthServiceImpl implements AuthService {
                 ))
                 // Spring tự động phân quyền với JWT thông qua claim "SCOPE"
                 .claim("scope", buildScope(user))
+                .build();
+
+        Payload payload = new Payload(claimsSet.toJSONObject());
+
+        JWSObject jwsObject = new JWSObject(header, payload);
+
+        try {
+            jwsObject.sign(new MACSigner(signerKey.getBytes()));
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            log.error("Cannot create JWT");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String generateRefreshToken(User user) throws KeyLengthException {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .subject(user.getEmail())
+                .jwtID(UUID.randomUUID().toString())
+                .issueTime(new Date())
+                .expirationTime(new Date(
+                        Instant.now().plus(refreshDuration, ChronoUnit.HOURS).toEpochMilli()
+                ))
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -259,5 +316,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return signedJWT;
+    }
+
+    private String extractEmail(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            return signedJWT.getJWTClaimsSet().getSubject();
+        } catch (ParseException e) {
+            throw new AppException(ErrorCode.TOKEN_INVALID);
+        }
     }
 }

@@ -1,13 +1,7 @@
 package com.dev.backend.controller;
 
-import com.dev.backend.dto.request.IntrospectReq;
-import com.dev.backend.dto.request.LoginReq;
-import com.dev.backend.dto.request.LogoutReq;
-import com.dev.backend.dto.request.RegisterReq;
-import com.dev.backend.dto.response.APIResponse;
-import com.dev.backend.dto.response.IntrospectRes;
-import com.dev.backend.dto.response.LoginRes;
-import com.dev.backend.dto.response.UserRes;
+import com.dev.backend.dto.request.*;
+import com.dev.backend.dto.response.*;
 import com.dev.backend.service.AuthService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
@@ -53,6 +47,12 @@ public class AuthController {
     public APIResponse<IntrospectRes> introspect(@Valid @RequestBody IntrospectReq request) throws ParseException, JOSEException {
         IntrospectRes result = authService.introspect(request);
         return APIResponse.<IntrospectRes>builder().result(result).build();
+    }
+
+    @PostMapping("refresh")
+    public APIResponse<RefreshTokenRes> refresh(@Valid @RequestBody RefreshTokenReq request) {
+        RefreshTokenRes result = authService.refreshToken(request);
+        return APIResponse.<RefreshTokenRes>builder().result(result).build();
     }
 
     @PostMapping("logout")

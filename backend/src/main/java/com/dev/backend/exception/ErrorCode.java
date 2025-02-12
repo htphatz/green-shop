@@ -24,6 +24,8 @@ public enum ErrorCode {
     OUT_OF_STOCK(400, "Product is out of stock", HttpStatus.BAD_REQUEST),
     VOUCHER_EXPIRED(400, "Voucher is expired", HttpStatus.BAD_REQUEST),
     PAYMENT_INVALID(400, "Payment invalid", HttpStatus.BAD_REQUEST),
+    TOKEN_INVALID(400, "Token invalid", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_INVALID(400, "Refresh token invalid", HttpStatus.BAD_REQUEST),
     ;
 
     private final Integer code;
