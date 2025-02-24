@@ -2,6 +2,8 @@ package com.dev.backend.config;
 
 import com.dev.backend.dto.request.IntrospectReq;
 import com.dev.backend.dto.response.IntrospectRes;
+import com.dev.backend.exception.AppException;
+import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.service.AuthService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ public class JwtDecoderConfig implements JwtDecoder {
     public Jwt decode(String token) throws JwtException {
         try {
             IntrospectRes response = authService.introspect(IntrospectReq.builder().token(token).build());
-            if (!response.isValid()) throw new JwtException("Token invalid");
+            if (!response.isValid()) throw new AppException(ErrorCode.TOKEN_INVALID);
         } catch (JOSEException | ParseException e) {
             throw new JwtException(e.getMessage());
         }

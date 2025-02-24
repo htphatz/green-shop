@@ -25,9 +25,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,6 +50,7 @@ public class OrderServiceImpl implements OrderService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
+    @Transactional
     public OrderRes createOrder(OrderReq request) throws JsonProcessingException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -59,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.PENDING);
 
         // Khai báo event cho Kafka
-//        List<UpdateInventoryEvent> events = new ArrayList<>();
+        // List<UpdateInventoryEvent> events = new ArrayList<>();
 
         double totalMoneyOfOrder = 0D;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -67,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
             Product product = productRepository.findById(orderItemReq.getProductId())
                     .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
             if (product.getSoldQuantity() + orderItemReq.getQuantity() > product.getQuantity()) {
-                throw new AppException(ErrorCode.OUT_OF_STOCK);
+                    throw new AppException(ErrorCode.OUT_OF_STOCK);
             }
 
             OrderItem orderItem = orderItemMapper.toOrderItem(orderItemReq);
@@ -81,11 +84,11 @@ public class OrderServiceImpl implements OrderService {
             product.setSoldQuantity(product.getSoldQuantity() + orderItemReq.getQuantity());
 
             // Tạo event cho Kafka
-//            UpdateInventoryEvent event = UpdateInventoryEvent.builder()
-//                    .productId(product.getId())
-//                    .soldQuantity(orderItem.getQuantity())
-//                    .build();
-//            events.add(event);
+            // UpdateInventoryEvent event = UpdateInventoryEvent.builder()
+            //         .productId(product.getId())
+            //         .soldQuantity(orderItem.getQuantity())
+            //         .build();
+            // events.add(event);
         }
 
         if (Strings.isNotEmpty(request.getVoucherCode())) {
@@ -108,7 +111,7 @@ public class OrderServiceImpl implements OrderService {
         productRepository.saveAll(orderItems.stream().map(OrderItem::getProduct).toList());
 
         // Gửi event cho Kafka
-//        kafkaTemplate.send("order-events", objectMapper.writeValueAsString(events));
+        // kafkaTemplate.send("order-events", objectMapper.writeValueAsString(events));
 
 
         // Brevo + Kafka
