@@ -1,6 +1,5 @@
 package com.dev.backend.repository.criteria;
 
-import com.dev.backend.entity.Product;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;

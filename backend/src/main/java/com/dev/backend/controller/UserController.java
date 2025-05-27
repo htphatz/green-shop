@@ -4,22 +4,27 @@ import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.UserRes;
 import com.dev.backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("users")
 @RequiredArgsConstructor
+@Tag(name = "User APIs")
 public class UserController {
     private final UserService userService;
 
     @GetMapping("me")
+    @Operation(summary = "Get my info")
     public APIResponse<UserRes> getCurrentInformation() {
         UserRes result = userService.getMyInfo();
         return APIResponse.<UserRes>builder().result(result).build();
     }
 
     @GetMapping
+    @Operation(summary = "Get all users")
     public APIResponse<PageDto<UserRes>> getAllUsers(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
@@ -28,6 +33,7 @@ public class UserController {
     }
 
     @GetMapping("{id}")
+    @Operation(summary = "Get user by id")
     public APIResponse<UserRes> getUserById(@PathVariable("id") String id) {
         UserRes result = userService.getUserById(id);
         return APIResponse.<UserRes>builder().result(result).build();

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,4 +18,21 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, String> {
 
     @Query("SELECT oi FROM OrderItem oi WHERE oi.order.id = :orderId")
     Page<OrderItem> findByOrderId(@Param("orderId") String orderId, Pageable pageable);
+
+    @Query(value = "SELECT p.name, SUM(oi.total_money) AS revenue " +
+            "FROM order_items oi " +
+            "JOIN products p ON oi.product_id = p.id " +
+            "JOIN orders o ON oi.order_id = o.id " +
+            "WHERE o.status = 'PAID' " +
+            "GROUP BY p.id, p.name", nativeQuery = true)
+    List<Object[]> getRevenueByProduct();
+
+    @Query(value = "SELECT c.name, SUM(oi.total_money) AS revenue " +
+            "FROM order_items oi " +
+            "JOIN products p ON oi.product_id = p.id " +
+            "JOIN categories c ON p.category_id = c.id " +
+            "JOIN orders o ON oi.order_id = o.id " +
+            "WHERE o.status = 'PAID' " +
+            "GROUP BY c.id, c.name", nativeQuery = true)
+    List<Object[]> getRevenueByCategory();
 }

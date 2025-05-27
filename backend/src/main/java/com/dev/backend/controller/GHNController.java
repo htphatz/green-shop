@@ -6,6 +6,8 @@ import com.dev.backend.dto.request.GHNShippingFeeReq;
 import com.dev.backend.dto.request.WardReq;
 import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.repository.httpclient.GHNClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("ghn")
 @RequiredArgsConstructor
+@Tag(name = "GHN APIs")
 public class GHNController {
     private final GHNClient ghnClient;
 
@@ -27,24 +30,28 @@ public class GHNController {
     private Integer shopId;
 
     @GetMapping("province")
+    @Operation(summary = "Get all provinces")
     public APIResponse<Object> getProvince() {
         Object result = ghnClient.getProvince(token);
         return APIResponse.<Object>builder().result(result).build();
     }
 
     @GetMapping("district")
+    @Operation(summary = "Get all districts by province's id")
     public APIResponse<Object> getDistrict(@Valid @RequestBody DistrictReq request) {
         Object result = ghnClient.getDistrict(token, request);
         return APIResponse.<Object>builder().result(result).build();
     }
 
     @GetMapping("ward")
+    @Operation(summary = "Get all wards by district's id")
     public APIResponse<Object> getWard(@Valid @RequestBody WardReq request) {
         Object result = ghnClient.getWard(token, request);
         return APIResponse.<Object>builder().result(result).build();
     }
 
     @GetMapping("service")
+    @Operation(summary = "Get service")
     public APIResponse<Object> getService(@Valid @RequestBody GHNServiceReq request) {
         request.setShopId(shopId);
         Object result = ghnClient.getService(token, request);
@@ -52,6 +59,7 @@ public class GHNController {
     }
 
     @GetMapping("fee")
+    @Operation(summary = "Get shipping fee")
     public APIResponse<Object> getShippingFee(@Valid @RequestBody GHNShippingFeeReq request) {
         Object result = ghnClient.getShippingFee(token, shopId, request);
         return APIResponse.<Object>builder().result(result).build();

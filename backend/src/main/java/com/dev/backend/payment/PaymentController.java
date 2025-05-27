@@ -14,10 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("payment")
@@ -26,7 +23,7 @@ public class PaymentController {
     private final VNPayService vnPayService;
     private final OrderService orderService;
 
-    @GetMapping("pay")
+    @PostMapping("pay")
     public APIResponse<?> pay(@RequestBody OrderReq request) throws JsonProcessingException {
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
             OrderRes result = orderService.createOrder(request);

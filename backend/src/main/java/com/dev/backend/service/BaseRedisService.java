@@ -6,7 +6,7 @@ import java.util.Set;
 
 public interface BaseRedisService <K, F, V> {
     void set(K key, V value);
-    void setTimeToLive(K key, Long timeoutInDays);
+    void setTimeToLive(K key, Long timeoutInMinutes);
     void hashSet(K key, F field, V value);
     boolean hashExists(K key, F field);
     V get(K key);

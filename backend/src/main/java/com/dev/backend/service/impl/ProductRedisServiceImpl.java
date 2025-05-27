@@ -35,7 +35,7 @@ public class ProductRedisServiceImpl implements ProductRedisService {
             ProductRes result = productMapper.toProductRes(product);
             String json = objectMapper.writeValueAsString(result);
             baseRedisService.set(key, json);
-            baseRedisService.setTimeToLive(key, 43200L);
+            baseRedisService.setTimeToLive(key, 10L); // Set timeout 10minutes
             return result;
         }
         else {
@@ -54,7 +54,7 @@ public class ProductRedisServiceImpl implements ProductRedisService {
             PageDto<ProductRes> result = PageDto.of(products).map(productMapper::toProductRes);
             String json = objectMapper.writeValueAsString(result);
             baseRedisService.set(key, json);
-            baseRedisService.setTimeToLive(key, 43200L);
+            baseRedisService.setTimeToLive(key, 10L);
             return result;
         }
         else {

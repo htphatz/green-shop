@@ -1,12 +1,12 @@
 server:
-  port: 8080
+  port: 8082
 
 spring:
   datasource:
-    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/green-shop}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DBMS_USERNAME:root}
-    password: ${DBMS_PASSWORD:mysql}
+    url: ${DBMS_CONNECTION:jdbc:postgresql://localhost:5432/green-shop}
+    driver-class-name: org.postgresql.Driver
+    username: ${DBMS_USERNAME:postgres}
+    password: ${DBMS_PASSWORD:postgresql}
   jpa:
     hibernate:
       ddl-auto: none

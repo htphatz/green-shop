@@ -5,22 +5,27 @@ import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.ProductRes;
 import com.dev.backend.service.ProductRedisService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("redis/products")
 @RequiredArgsConstructor
+@Tag(name = "Product Redis APIs")
 public class ProductRedisController {
     private final ProductRedisService productRedisService;
 
     @GetMapping("{id}")
+    @Operation(summary = "Get product by id")
     public APIResponse<ProductRes> getProductById(@PathVariable("id") String id) throws JsonProcessingException {
         ProductRes result = productRedisService.getProductRedisById(id);
         return APIResponse.<ProductRes>builder().result(result).build();
     }
 
     @GetMapping
+    @Operation(summary = "Search products")
     public APIResponse<PageDto<ProductRes>> searchProductsRedis(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "categoryId", required = false) String categoryId,

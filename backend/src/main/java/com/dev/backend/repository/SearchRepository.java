@@ -29,7 +29,7 @@ public class SearchRepository {
 
     private static final String LIKE_FORMAT = "%%%s%%";
     private static final String SEARCH_OPERATOR = "(\\w+?)(:|<|>)(.*)";
-    private static final String SORT_BY = "(\\w+?)(asc|desc)(.*)";
+    private static final String SORT_BY = "(\\w+?)(:)(asc|desc)";
 
     public Page<Product> searchByCustomQuery(Integer pageNumber, Integer pageSize, String sortBy, String keyword) {
         log.info("Execute search Product with keyword={}", keyword);
@@ -95,14 +95,14 @@ public class SearchRepository {
             }
         }
 
-        if (StringUtils.hasLength(sortBy)) {
-            // price:asc|desc
-            Pattern pattern = Pattern.compile(SORT_BY);
-            Matcher matcher = pattern.matcher(sortBy);
-            if (matcher.find()) {
-                criteriaList.add(new SearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3)));
-            }
-        }
+//        if (StringUtils.hasLength(sortBy)) {
+//            // price:asc|desc
+//            Pattern pattern = Pattern.compile(SORT_BY);
+//            Matcher matcher = pattern.matcher(sortBy);
+//            if (matcher.find()) {
+//                criteriaList.add(new SearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3)));
+//            }
+//        }
 
         List<Product> products = getProducts(pageNumber, pageSize, sortBy, categoryId, criteriaList);
         Long totalElements = getTotalElements(criteriaList);

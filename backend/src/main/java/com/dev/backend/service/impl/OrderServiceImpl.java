@@ -46,7 +46,6 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherRepository voucherRepository;
     private final OrderItemMapper orderItemMapper;
     private final OrderMapper orderMapper;
-    private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
@@ -70,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
             Product product = productRepository.findById(orderItemReq.getProductId())
                     .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
             if (product.getSoldQuantity() + orderItemReq.getQuantity() > product.getQuantity()) {
-                    throw new AppException(ErrorCode.OUT_OF_STOCK);
+                throw new AppException(ErrorCode.OUT_OF_STOCK);
             }
 
             OrderItem orderItem = orderItemMapper.toOrderItem(orderItemReq);
