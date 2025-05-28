@@ -6,6 +6,7 @@ import java.util.List;
 import com.dev.backend.exception.AppException;
 import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.repository.OrderItemRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.response.RevenueRes;
@@ -50,12 +51,28 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     @Override
-    public List<Object[]> getRevenueByProduct() {
-        return orderItemRepository.getRevenueByProduct();
+    public List<Object[]> getRevenueByProduct(LocalDateTime startDate, LocalDateTime endDate) {
+        if (endDate == null) {
+            endDate = LocalDateTime.now();
+        }
+
+        if (endDate.isBefore(startDate)) {
+            throw new AppException(ErrorCode.DATE_INVALID);
+        }
+
+        return orderItemRepository.getRevenueByProduct(startDate, endDate);
     }
 
     @Override
-    public List<Object[]> getRevenueByCategory() {
-        return orderItemRepository.getRevenueByCategory();
+    public List<Object[]> getRevenueByCategory(LocalDateTime startDate, LocalDateTime endDate) {
+        if (endDate == null) {
+            endDate = LocalDateTime.now();
+        }
+
+        if (endDate.isBefore(startDate)) {
+            throw new AppException(ErrorCode.DATE_INVALID);
+        }
+
+        return orderItemRepository.getRevenueByCategory(startDate, endDate);
     }
 }

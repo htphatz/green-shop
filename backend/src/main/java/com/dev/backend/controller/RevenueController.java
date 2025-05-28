@@ -45,17 +45,17 @@ public class RevenueController {
         return APIResponse.<RevenueRes>builder().result(result).build();
     }
 
-    @GetMapping("by-product")
+    @PostMapping("by-product")
     @Operation(summary = "Get revenue by product")
-    public APIResponse<List<Object[]>> getRevenueByProduct() {
-        List<Object[]> result = revenueService.getRevenueByProduct();
+    public APIResponse<List<Object[]>> getRevenueByProduct(@Valid @RequestBody RevenueReq request) {
+        List<Object[]> result = revenueService.getRevenueByProduct(request.getStartDate(), request.getEndDate());
         return APIResponse.<List<Object[]>>builder().result(result).build();
     }
 
-    @GetMapping("by-category")
+    @PostMapping("by-category")
     @Operation(summary = "Get revenue by category")
-    public APIResponse<List<Object[]>> getRevenueByCategory() {
-        List<Object[]> result = revenueService.getRevenueByCategory();
+    public APIResponse<List<Object[]>> getRevenueByCategory(@Valid @RequestBody RevenueReq request) {
+        List<Object[]> result = revenueService.getRevenueByCategory(request.getStartDate(), request.getEndDate());
         return APIResponse.<List<Object[]>>builder().result(result).build();
     }
 }

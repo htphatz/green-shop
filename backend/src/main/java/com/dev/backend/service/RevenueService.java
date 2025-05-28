@@ -9,7 +9,7 @@ public interface RevenueService {
   RevenueRes getRevenue(LocalDateTime startDate, LocalDateTime endDate);
   RevenueRes getRevenueByMonth(Integer month, Integer year);
   RevenueRes getRevenueByYear(Integer year);
-  List<Object[]> getRevenueByProduct();
-  List<Object[]> getRevenueByCategory();
+  List<Object[]> getRevenueByProduct(LocalDateTime startDate, LocalDateTime endDate);
+  List<Object[]> getRevenueByCategory(LocalDateTime startDate, LocalDateTime endDate);
 }
 
