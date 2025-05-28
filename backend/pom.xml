@@ -34,6 +34,7 @@
 		<oauth2-resource-service.version>3.3.4</oauth2-resource-service.version>
 		<redis-client.version>5.2.0</redis-client.version>
 		<spring-cloud.version>2024.0.0</spring-cloud.version>
+		<maven-plugin.version>3.4.0</maven-plugin.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -138,6 +139,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${maven-plugin.version}</version>
 				<configuration>
 					<excludes>
 						<exclude>
