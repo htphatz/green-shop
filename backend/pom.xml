@@ -145,7 +145,6 @@
 						<exclude>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>${projectlombok-lombok.version}</version>
 						</exclude>
 					</excludes>
 				</configuration>
