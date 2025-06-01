@@ -11,6 +11,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-22.04
+    outputs:
+      TAG: ${{ steps.set-tag.outputs.TAG }}
     steps:
       - name: Checkout Backend
         uses: actions/checkout@v4
@@ -91,7 +93,7 @@ jobs:
             grep -v '^TAG=' .env > .env.tmp || true
             echo "TAG=${{ needs.build-and-push.outputs.TAG }}" >> .env.tmp
             mv .env.tmp .env
-            
+
             # Stop only the app service
             docker-compose stop app
             docker-compose rm -f app
@@ -101,9 +103,9 @@ jobs:
 
             # Update docker-compose.yml with new tag for app service
             sed -i "s|image:.*green-shop.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/green-shop:${{ needs.build-and-push.outputs.TAG }}|" docker-compose.yml
-            
+
             # Start only the app service
             docker-compose up -d app
-            
+
             # Clean up only unused app images
-            docker image prune -f --filter "label=app=green-shop" 
+            docker image prune -f --filter "label=app=green-shop"
