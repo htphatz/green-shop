@@ -87,7 +87,7 @@ jobs:
           username: root
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /projects/green-shop
+            cd /projects/green-shop/backend
 
             # Update TAG in file .env
             ed -i "s|TAG=.*|TAG=${{ needs.build-and-push.outputs.TAG }}|" .env
