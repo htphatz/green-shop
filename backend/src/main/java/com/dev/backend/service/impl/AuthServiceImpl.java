@@ -5,7 +5,6 @@ import com.dev.backend.dto.response.IntrospectRes;
 import com.dev.backend.dto.response.LoginRes;
 import com.dev.backend.dto.response.RefreshTokenRes;
 import com.dev.backend.dto.response.UserRes;
-import com.dev.backend.entity.InvalidatedToken;
 import com.dev.backend.entity.Role;
 import com.dev.backend.entity.User;
 import com.dev.backend.exception.AppException;
@@ -63,18 +62,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Value(value = "${jwt.refresh-duration}")
     private int refreshDuration;
-
-    @Value("${outbound.identity.client-id}")
-    private String clientId;
-
-    @Value("${outbound.identity.client-secret}")
-    private String clientSecret;
-
-    @Value("${outbound.identity.redirect-uri}")
-    private String redirectUri;
-
-    @Value("${outbound.identity.grant-type}")
-    private String grantType;
 
     @Override
     public UserRes register(RegisterReq request) {
@@ -148,39 +135,6 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
-    }
-
-    @Override
-    public LoginRes loginOutbound(String code) throws KeyLengthException {
-        // Exchange code
-        ExchangeCodeReq request = ExchangeCodeReq.builder()
-                .code(code)
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .redirectUri(redirectUri)
-                .grantType(grantType)
-                .build();
-        var response = outboundIdentityClient.exchangeCode(request);
-        log.info("TOKEN RESPONSE {}", response);
-
-        // Get user info
-        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
-        log.info("User Info {}", userInfo);
-
-        // Onboard user
-        Set<Role> roles = new HashSet<>();
-        roleRepository.findById(Role.USER).ifPresent(roles::add);
-        var user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
-                () -> userRepository.save(User.builder()
-                        .email(userInfo.getEmail())
-                        .firstName(userInfo.getGivenName())
-                        .lastName(userInfo.getFamilyName())
-                        .roles(roles)
-                        .build()));
-
-        // Generate token;
-        var token = generateAccessToken(user);
-        return LoginRes.builder().accessToken(token).build();
     }
 
     @Override

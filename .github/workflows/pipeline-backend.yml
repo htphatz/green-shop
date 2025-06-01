@@ -1,4 +1,4 @@
-name: Build Backend Project and containerize to Docker Hub
+name: CI/CD Pipeline for Backend
 
 on:
   push:
@@ -9,9 +9,8 @@ on:
       - .github/workflows/*-backend.yml
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    name: Build Backend
+  build-and-push:
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Backend
         uses: actions/checkout@v4
@@ -29,22 +28,26 @@ jobs:
         working-directory: ./backend
         run: mvn clean install -DskipTests
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Create .env file from secrets
         working-directory: ./backend
         run: |
-          echo "KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${{ secrets.KAFKA_CFG_CONTROLLER_QUORUM_VOTERS }}" >> .env
-          echo "KAFKA_CFG_LISTENERS=${{ secrets.KAFKA_CFG_LISTENERS }}" >> .env
-          echo "KAFKA_CFG_ADVERTISED_LISTENERS=${{ secrets.KAFKA_CFG_ADVERTISED_LISTENERS }}" >> .env
-
-      - name: Run Docker Compose
-        working-directory: ./backend
-        run: |
-          docker-compose up -d
+          cat << EOF > .env
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          DBMS_CONNECTION=${{ secrets.DBMS_CONNECTION }}
+          API_SECRET_CLOUDINARY=${{ secrets.API_SECRET_CLOUDINARY }}
+          SECRET_KEY_VNPAY=${{ secrets.SECRET_KEY_VNPAY }}
+          TOKEN_GHN=${{ secrets.TOKEN_GHN }}
+          API_KEY_BREVO=${{ secrets.API_KEY_BREVO }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          KAFKA_SERVER=${{ secrets.KAFKA_SERVER }}
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${{ secrets.KAFKA_CFG_CONTROLLER_QUORUM_VOTERS }}
+          KAFKA_CFG_LISTENERS=${{ secrets.KAFKA_CFG_LISTENERS }}
+          KAFKA_CFG_ADVERTISED_LISTENERS=${{ secrets.KAFKA_CFG_ADVERTISED_LISTENERS }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          EOF
 
       - name: Login to Docker Hub Container Registry
         uses: docker/login-action@v3
@@ -60,8 +63,47 @@ jobs:
           TAG="version_${SHORT_SHA}"
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Build Docker Image with Docker CLI
+      - name: Build Docker Image and Push with Docker CLI
         working-directory: ./backend
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/green-shop:${{ steps.set-tag.outputs.TAG }} .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/green-shop:${{ steps.set-tag.outputs.TAG }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Login to Docker Hub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd /projects/green-shop
+
+            # Update TAG in file .env
+            ed -i "s|TAG=.*|TAG=${{ needs.build-and-push.outputs.TAG }}|" .env
+            
+            # Stop only the app service
+            docker-compose stop app
+            docker-compose rm -f app
+
+            # Pull only the app image
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/green-shop:${{ needs.build-and-push.outputs.TAG }}
+
+            # Update docker-compose.yml with new tag for app service
+            sed -i "s|image:.*green-shop.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/green-shop:${{ needs.build-and-push.outputs.TAG }}|" docker-compose.yml
+            
+            # Start only the app service
+            docker-compose up -d app
+            
+            # Clean up only unused app images
+            docker image prune -f --filter "label=app=green-shop" 

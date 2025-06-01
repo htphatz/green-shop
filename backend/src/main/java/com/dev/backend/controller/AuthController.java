@@ -42,12 +42,6 @@ public class AuthController {
         return APIResponse.<LoginRes>builder().result(result).build();
     }
 
-    @PostMapping("outbound/login")
-    public APIResponse<LoginRes> outboundLogin(@Valid @RequestParam String code) throws KeyLengthException {
-        LoginRes result = authService.loginOutbound(code);
-        return APIResponse.<LoginRes>builder().result(result).build();
-    }
-
     @PostMapping("introspect")
     public APIResponse<IntrospectRes> introspect(@Valid @RequestBody IntrospectReq request) throws ParseException, JOSEException {
         IntrospectRes result = authService.introspect(request);

@@ -1,26 +1,31 @@
 version: "3.8"
 
 services:
-#  app:
-#    image: 'app:v1'
-#    container_name: springboot_app
-#    hostname: springboot_app
-#    env_file: .env
-#    ports:
-#      - '8081:8080'
-#    environment:
-#      - TZ=Asia/Ho_Chi_Minh
-#      - DBMS_CONNECTION=${DBMS_CONNECTION}
-#      - KAFKA_SERVER=kafka:9094
-#      - API_SECRET_CLOUDINARY=${API_SECRET_CLOUDINARY}
-#      - SECRET_KEY_VNPAY=${SECRET_KEY_VNPAY}
-#      - TOKEN_GHN=${TOKEN_GHN}
-#      - API_KEY_BREVO=${API_KEY_BREVO}
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#      - /etc/timezone:/etc/timezone:ro
-#    networks:
-#      - default-network
+  app:
+    build: .
+    container_name: green-shop
+    hostname: green-shop
+    env_file: .env
+    restart: always
+    ports:
+      - '8080:8080'
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - DBMS_CONNECTION=${DBMS_CONNECTION}
+      - KAFKA_SERVER=kafka:9094
+      - dock=${API_SECRET_CLOUDINARY}
+      - SECRET_KEY_VNPAY=${SECRET_KEY_VNPAY}
+      - TOKEN_GHN=${TOKEN_GHN}
+      - API_KEY_BREVO=${API_KEY_BREVO}
+      - REDIS_HOST = ${REDIS_HOST}
+      - KAFKA_SERVER = ${KAFKA_SERVER}
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - default-network
+
   kafka:
     image: 'bitnami/kafka:3.8'
     container_name: kafka
@@ -38,6 +43,7 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     networks:
       - default-network
+
   redis:
     image: 'redis:latest'
     container_name: redis
@@ -46,6 +52,35 @@ services:
       - '6379:6379'
     networks:
       - default-network
+
+  mysql:
+    image: mysql:8.0-debian
+    container_name: mysql
+    env_file: .env
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - default-network
+
+volumes:
+  mysql_data:
+    name: mysql_data
+    driver: local
+
 networks:
   default-network:
     driver: bridge

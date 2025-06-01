@@ -1,16 +1,18 @@
 server:
-  port: 8082
+  port: 8080
 
 spring:
   datasource:
-    url: ${DBMS_CONNECTION:jdbc:postgresql://localhost:5432/green-shop}
-    driver-class-name: org.postgresql.Driver
-    username: ${DBMS_USERNAME:postgres}
-    password: ${DBMS_PASSWORD:postgresql}
+    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/greenshop}
+    username: ${DBMS_USERNAME:greenshop}
+    password: ${DBMS_PASSWORD:greenshop}
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
@@ -37,12 +39,12 @@ cloudinary:
   api_key: 195446941243745
   api_secret: ${API_SECRET_CLOUDINARY}
 
-outbound:
-  identity:
-    client-id: 726980649628-lp3bilg5elg8bma1cpqkgi6jbimgc40r.apps.googleusercontent.com
-    client-secret: ${CLIENT_SECRET_GOOGLE}
-    redirect-uri: http://localhost:3000/authenticate
-    grant-type: authorization_code
+#outbound:
+#  identity:
+#    client-id: 726980649628-lp3bilg5elg8bma1cpqkgi6jbimgc40r.apps.googleusercontent.com
+#    client-secret: ${CLIENT_SECRET_GOOGLE}
+#    redirect-uri: http://localhost:3000/authenticate
+#    grant-type: authorization_code
 
 resource:
   defaultImage: https://res.cloudinary.com/drgidfvnd/image/upload/v1735303638/no-image.webp

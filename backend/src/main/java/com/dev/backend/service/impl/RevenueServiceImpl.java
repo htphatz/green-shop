@@ -2,6 +2,7 @@ package com.dev.backend.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 import com.dev.backend.exception.AppException;
 import com.dev.backend.exception.ErrorCode;
@@ -31,8 +32,9 @@ public class RevenueServiceImpl implements RevenueService {
             throw new AppException(ErrorCode.DATE_INVALID);
         }
 
+        BigDecimal revenue = orderRepository.getRevenue(startDate, endDate);
         return RevenueRes.builder()
-                .revenue(orderRepository.getRevenue(startDate, endDate))
+                .revenue(revenue != null ? revenue : BigDecimal.ZERO)
                 .build();
     }
 
