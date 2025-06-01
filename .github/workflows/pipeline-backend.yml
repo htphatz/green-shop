@@ -28,26 +28,24 @@ jobs:
         working-directory: ./backend
         run: mvn clean install -DskipTests
 
-      - name: Create .env file from secrets
-        working-directory: ./backend
-        run: |
-          cat << EOF > .env
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          DBMS_CONNECTION=${{ secrets.DBMS_CONNECTION }}
-          API_SECRET_CLOUDINARY=${{ secrets.API_SECRET_CLOUDINARY }}
-          SECRET_KEY_VNPAY=${{ secrets.SECRET_KEY_VNPAY }}
-          TOKEN_GHN=${{ secrets.TOKEN_GHN }}
-          API_KEY_BREVO=${{ secrets.API_KEY_BREVO }}
-          REDIS_HOST=${{ secrets.REDIS_HOST }}
-          KAFKA_SERVER=${{ secrets.KAFKA_SERVER }}
-          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${{ secrets.KAFKA_CFG_CONTROLLER_QUORUM_VOTERS }}
-          KAFKA_CFG_LISTENERS=${{ secrets.KAFKA_CFG_LISTENERS }}
-          KAFKA_CFG_ADVERTISED_LISTENERS=${{ secrets.KAFKA_CFG_ADVERTISED_LISTENERS }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-          MYSQL_USER=${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          EOF
+      # - name: Create .env file from secrets
+      #   working-directory: ./backend
+      #   run: |
+      #     echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+      #     echo "DBMS_CONNECTION=${{ secrets.DBMS_CONNECTION }}" >> .env
+      #     echo "API_SECRET_CLOUDINARY=${{ secrets.API_SECRET_CLOUDINARY }}" >> .env
+      #     echo "SECRET_KEY_VNPAY=${{ secrets.SECRET_KEY_VNPAY }}" >> .env
+      #     echo "TOKEN_GHN=${{ secrets.TOKEN_GHN }}" >> .env
+      #     echo "API_KEY_BREVO=${{ secrets.API_KEY_BREVO }}" >> .env
+      #     echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+      #     echo "KAFKA_SERVER=${{ secrets.KAFKA_SERVER }}" >> .env
+      #     echo "KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${{ secrets.KAFKA_CFG_CONTROLLER_QUORUM_VOTERS }}" >> .env
+      #     echo "KAFKA_CFG_LISTENERS=${{ secrets.KAFKA_CFG_LISTENERS }}" >> .env
+      #     echo "KAFKA_CFG_ADVERTISED_LISTENERS=${{ secrets.KAFKA_CFG_ADVERTISED_LISTENERS }}" >> .env
+      #     echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+      #     echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+      #     echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+      #     echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
 
       - name: Login to Docker Hub Container Registry
         uses: docker/login-action@v3
@@ -87,10 +85,12 @@ jobs:
           username: root
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /projects/green-shop/backend
+            cd /projects/green-shop
 
             # Update TAG in file .env
-            ed -i "s|TAG=.*|TAG=${{ needs.build-and-push.outputs.TAG }}|" .env
+            grep -v '^TAG=' .env > .env.tmp || true
+            echo "TAG=${{ needs.build-and-push.outputs.TAG }}" >> .env.tmp
+            mv .env.tmp .env
             
             # Stop only the app service
             docker-compose stop app
