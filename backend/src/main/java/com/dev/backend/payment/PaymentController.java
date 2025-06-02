@@ -11,6 +11,8 @@ import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.payment.vnpay.VNPayService;
 import com.dev.backend.service.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,11 +21,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("payment")
 @RequiredArgsConstructor
+@Tag(name = "Address APIs")
 public class PaymentController {
     private final VNPayService vnPayService;
     private final OrderService orderService;
 
     @PostMapping("pay")
+    @Operation(summary = "Pay for an order")
     public APIResponse<?> pay(@RequestBody OrderReq request) throws JsonProcessingException {
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
             OrderRes result = orderService.createOrder(request);
@@ -37,6 +41,7 @@ public class PaymentController {
     }
 
     @GetMapping("vn-pay-callback")
+    @Operation(summary = "Pay callback handler")
     public APIResponse<?> payCallbackHandler(HttpServletRequest request) {
         String status = request.getParameter("vnp_ResponseCode");
         String orderId = request.getParameter("vnp_TxnRef");
