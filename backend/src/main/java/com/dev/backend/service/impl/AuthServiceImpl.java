@@ -50,8 +50,8 @@ public class AuthServiceImpl implements AuthService {
 
     private static final String FAILED_LOGIN_PREFIX = "failed_login";
     private static final String BLOCKED_PREFIX = "blocked";
-    private static final int MAX_FAILED_LOGIN = 10;
-    private static final long LOGIN_TIMEOUT_MINUTES = 2;
+    private static final int MAX_FAILED_LOGIN = 5;
+    private static final long LOGIN_TIMEOUT_MINUTES = 5;
     private static final long LOCK_TIME_MINUTES = 10;
 
     @Value(value = "${jwt.signerKey}")

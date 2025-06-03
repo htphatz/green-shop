@@ -4,6 +4,7 @@ import com.dev.backend.entity.District;
 import com.dev.backend.entity.Province;
 import com.dev.backend.entity.Ward;
 import com.dev.backend.service.AddressService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +24,19 @@ public class AddressController {
 
     @GetMapping("province")
     @Operation(summary = "Get all provinces")
-    public List<Province> getAllProvince() {
+    public List<Province> getAllProvince() throws JsonProcessingException {
         return addressService.getAllProvinces();
     }
 
     @GetMapping("district")
     @Operation(summary = "Get all districts by province's id")
-    public List<District> getDistrictByProvinceId(@RequestParam("provinceId") Integer provinceId) {
+    public List<District> getDistrictByProvinceId(@RequestParam("provinceId") Integer provinceId) throws JsonProcessingException {
         return addressService.getByProvinceId(provinceId);
     }
 
     @GetMapping("ward")
     @Operation(summary = "Get all wards by district's id")
-    public List<Ward> getWardByDistrictId(@RequestParam("districtId") Integer districtId) {
+    public List<Ward> getWardByDistrictId(@RequestParam("districtId") Integer districtId) throws JsonProcessingException {
         return addressService.getByDistrictId(districtId);
     }
 }

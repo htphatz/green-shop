@@ -32,11 +32,11 @@ public class VoucherServiceImpl implements VoucherService {
                 .build();
 
         try {
-            voucherRepository.save(voucher);
+            voucher = voucherRepository.save(voucher);
         } catch (DataIntegrityViolationException exception) {
             throw new AppException(ErrorCode.VOUCHER_EXISTED);
         }
-        return voucherMapper.toVoucherRes(voucherRepository.save(voucher));
+        return voucherMapper.toVoucherRes(voucher);
     }
 
     @Override

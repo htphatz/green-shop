@@ -9,6 +9,9 @@ import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.mapper.CategoryMapper;
 import com.dev.backend.repository.CategoryRepository;
 import com.dev.backend.service.CategoryService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,8 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CloudinaryService cloudinaryService;
     private final CategoryMapper categoryMapper;
+    private final BaseRedisServiceImpl<String, String, String> baseRedisService;
+    private final ObjectMapper objectMapper;
 
     @Value("${resource.defaultImage}")
     private String defaultImage;
@@ -43,18 +48,38 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryRes getCategoryById(String id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        return categoryMapper.toCategoryRes(category);
+    public CategoryRes getCategoryById(String id) throws JsonProcessingException {
+        String key = String.format("category:%s", id);
+        if (baseRedisService.get(key) == null) {
+            Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            CategoryRes result = categoryMapper.toCategoryRes(category);
+            String json = objectMapper.writeValueAsString(result);
+            baseRedisService.set(key, json);
+            baseRedisService.setTimeToLive(key, 10L);
+            return result;
+        } else {
+            String json = baseRedisService.get(key);
+            return objectMapper.readValue(json, CategoryRes.class);
+        }
     }
 
     @Override
-    public PageDto<CategoryRes> getAllCategories(Integer pageNumber, Integer pageSize) {
-        pageNumber--;
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Category> categories = categoryRepository.findAll(pageable);
-        return PageDto.of(categories).map(categoryMapper::toCategoryRes);
+    public PageDto<CategoryRes> getAllCategories(Integer pageNumber, Integer pageSize) throws JsonProcessingException {
+        String key = getKey(pageNumber, pageSize);
+        if (baseRedisService.get(key) == null) {
+            pageNumber--;
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<Category> categories = categoryRepository.findAll(pageable);
+            PageDto<CategoryRes> result = PageDto.of(categories).map(categoryMapper::toCategoryRes);
+            String json = objectMapper.writeValueAsString(result);
+            baseRedisService.set(key, json);
+            baseRedisService.setTimeToLive(key, 10L);
+            return result;
+        } else {
+            String json = baseRedisService.get(key);
+            return objectMapper.readValue(json, new TypeReference<PageDto<CategoryRes>>() {});
+        }
     }
 
     @Override
@@ -69,5 +94,9 @@ public class CategoryServiceImpl implements CategoryService {
             category.setImageUrl(newImageUrl);
         }
         return categoryMapper.toCategoryRes(categoryRepository.save(category));
+    }
+
+    private String getKey(Integer pageNumber, Integer pageSize) {
+        return String.format("all_categories:%s:%s", pageNumber, pageSize);
     }
 }

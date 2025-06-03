@@ -32,12 +32,6 @@ public class AuthController {
     @PostMapping("login")
     @Operation(summary = "Login")
     public APIResponse<LoginRes> login(@Valid @RequestBody LoginReq request) throws KeyLengthException {
-        LoginRes result = authService.login(request);
-        return APIResponse.<LoginRes>builder().result(result).build();
-    }
-
-    @PostMapping("loginWithRedis")
-    public APIResponse<LoginRes> loginWithRedis(@Valid @RequestBody LoginReq request) throws KeyLengthException {
         LoginRes result = authService.loginWithRedis(request);
         return APIResponse.<LoginRes>builder().result(result).build();
     }
