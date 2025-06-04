@@ -1,11 +1,14 @@
 package com.dev.backend.controller;
 
+import com.dev.backend.dto.request.ChangePasswordReq;
+import com.dev.backend.dto.request.UpdateUserInfoReq;
 import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.UserRes;
 import com.dev.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +40,20 @@ public class UserController {
     public APIResponse<UserRes> getUserById(@PathVariable("id") String id) {
         UserRes result = userService.getUserById(id);
         return APIResponse.<UserRes>builder().result(result).build();
+    }
+
+    @PostMapping("update-info")
+    @Operation(summary = "Update information of the current user")
+    public APIResponse<UserRes> updateInfo(@Valid @RequestBody UpdateUserInfoReq request) {
+        UserRes result = userService.updateMyInfo(request);
+        return APIResponse.<UserRes>builder().result(result).build();
+    }
+
+    @PostMapping("change-password")
+    @Operation(summary = "Change password of the current user")
+    public APIResponse<Void> changePassword(@Valid @RequestBody ChangePasswordReq request) {
+        userService.changePassword(request);
+        return APIResponse.<Void>builder().build();
     }
 
 //    @GetMapping("{email}")

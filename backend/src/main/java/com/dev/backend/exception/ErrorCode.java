@@ -19,6 +19,7 @@ public enum ErrorCode {
     DISTRICT_NOT_FOUND(404, "District not found", HttpStatus.NOT_FOUND),
     WARD_NOT_FOUND(404, "Ward not found", HttpStatus.NOT_FOUND),
     PASSWORD_INVALID(400, "Password invalid", HttpStatus.BAD_REQUEST),
+    PASSWORD_CONFIRM_INVALID(400, "Password confirm invalid", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED),
     QUANTITY_INVALID(400, "Quantity invalid", HttpStatus.BAD_REQUEST),
     OUT_OF_STOCK(400, "Product is out of stock", HttpStatus.BAD_REQUEST),
