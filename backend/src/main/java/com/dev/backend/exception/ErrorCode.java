@@ -28,6 +28,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_INVALID(400, "Refresh token invalid", HttpStatus.BAD_REQUEST),
     TOKEN_BLACK_LIST(400, "Token in blacklist", HttpStatus.BAD_REQUEST),
     DATE_INVALID(400, "Date invalid", HttpStatus.BAD_REQUEST),
+    BANNER_NOT_FOUND(404, "Banner not found", HttpStatus.NOT_FOUND),
     ;
 
     private final Integer code;
