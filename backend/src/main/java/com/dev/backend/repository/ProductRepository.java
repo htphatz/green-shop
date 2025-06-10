@@ -24,8 +24,13 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     @Query("SELECT p FROM Product p WHERE " +
             "(:keyword IS NULL OR :keyword = '' OR p.name LIKE %:keyword% OR p.description LIKE %:keyword%) " +
-            "AND (:categoryId IS NULL OR p.category.id = :categoryId) ")
+            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
+            "ORDER BY " +
+            "CASE WHEN :sortDir = 'asc' THEN p.price END ASC, " +
+            "CASE WHEN :sortDir = 'desc' THEN p.price END DESC, " +
+            "p.id ASC")
     Page<Product> searchProducts(@Param("keyword") String keyword,
-                             @Param("categoryId") String categoryId,
-                             Pageable pageable);
+                                 @Param("categoryId") String categoryId,
+                                 @Param("sortDir") String sortDir,
+                                 Pageable pageable);
 }

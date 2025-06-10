@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
-import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -87,10 +86,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public PageDto<ProductRes> searchProducts(String keyword, String categoryId, Integer pageNumber, Integer pageSize) {
+    public PageDto<ProductRes> searchProducts(String keyword, String categoryId, String sortDir, Integer pageNumber, Integer pageSize) {
         pageNumber--;
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Product> products = productRepository.searchProducts(keyword, categoryId, pageable);
+        Page<Product> products = productRepository.searchProducts(keyword, categoryId, sortDir, pageable);
         return PageDto.of(products).map(productMapper::toProductRes);
     }
 

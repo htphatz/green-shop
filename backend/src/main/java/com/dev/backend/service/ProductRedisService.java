@@ -6,5 +6,5 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface ProductRedisService {
     ProductRes getProductRedisById(String id) throws JsonProcessingException;
-    PageDto<ProductRes> searchProductsRedis(String keyword, String categoryId, Integer pageNumber, Integer pageSize) throws JsonProcessingException;
+    PageDto<ProductRes> searchProductsRedis(String keyword, String categoryId, String sortDir, Integer pageNumber, Integer pageSize) throws JsonProcessingException;
 }

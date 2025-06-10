@@ -18,4 +18,6 @@ public interface AuthService {
     IntrospectRes introspect(IntrospectReq request) throws JOSEException, ParseException;
     void logout(LogoutReq request) throws ParseException, JOSEException;
     RefreshTokenRes refreshToken(RefreshTokenReq request);
+    void reactivateUser(String userId);
+    void clearFailedLoginAttempts(String userId);
 }

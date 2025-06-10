@@ -44,12 +44,12 @@ public class ProductRedisServiceImpl implements ProductRedisService {
     }
 
     @Override
-    public PageDto<ProductRes> searchProductsRedis(String keyword, String categoryId, Integer pageNumber, Integer pageSize) throws JsonProcessingException {
+    public PageDto<ProductRes> searchProductsRedis(String keyword, String categoryId, String sortDir, Integer pageNumber, Integer pageSize) throws JsonProcessingException {
         String key = getKey(keyword, categoryId, pageNumber, pageSize);
         if (baseRedisService.get(key) == null) {
             pageNumber--;
             Pageable pageable = PageRequest.of(pageNumber, pageSize);
-            Page<Product> products = productRepository.searchProducts(keyword, categoryId, pageable);
+            Page<Product> products = productRepository.searchProducts(keyword, categoryId, sortDir, pageable);
             PageDto<ProductRes> result = PageDto.of(products).map(productMapper::toProductRes);
             String json = objectMapper.writeValueAsString(result);
             baseRedisService.set(key, json);

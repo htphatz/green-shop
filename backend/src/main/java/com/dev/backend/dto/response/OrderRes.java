@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Builder
@@ -19,4 +20,5 @@ public class OrderRes {
     private BigDecimal totalMoney;
     private OrderStatus status;
     private PaymentMethod paymentMethod;
+    private List<OrderItemRes> orderItems;
 }

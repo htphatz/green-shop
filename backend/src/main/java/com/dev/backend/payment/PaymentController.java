@@ -2,6 +2,7 @@ package com.dev.backend.payment;
 
 import com.dev.backend.dto.request.ChangeOrderStatusReq;
 import com.dev.backend.dto.request.OrderReq;
+import com.dev.backend.dto.request.PaymentStatusUpdateReq;
 import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.OrderRes;
 import com.dev.backend.enums.OrderStatus;
@@ -51,6 +52,27 @@ public class PaymentController {
         } else {
             deleteOrderFromCallback(orderId);
             return APIResponse.<PaymentDto>builder().code(HttpStatus.BAD_REQUEST.value()).message("Payment failed").build();
+        }
+    }
+
+    @PostMapping("update-status")
+    @Operation(summary = "Update payment status")
+    public APIResponse<?> updatePaymentStatus(@RequestBody PaymentStatusUpdateReq request) {
+        if ("00".equals(request.getResponseCode())) {
+            ChangeOrderStatusReq changeOrderStatusReq = ChangeOrderStatusReq.builder()
+                    .status(OrderStatus.PAID)
+                    .build();
+            OrderRes result = orderService.updateOrderStatus(request.getOrderId(), changeOrderStatusReq);
+            return APIResponse.<PaymentDto>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Payment successful")
+                    .build();
+        } else {
+            orderService.deleteOrder(request.getOrderId());
+            return APIResponse.<PaymentDto>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message("Payment failed")
+                    .build();
         }
     }
 

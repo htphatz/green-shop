@@ -87,6 +87,8 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryRes updateCategory(String id, CategoryReq request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        String key = String.format("category:%s", id);
+        baseRedisService.delete(key);
         category.setName(request.getName());
         if (request.getFileImage() != null && !request.getFileImage().isEmpty()) {
             Map data = this.cloudinaryService.upload(request.getFileImage());

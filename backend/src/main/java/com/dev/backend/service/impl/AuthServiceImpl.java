@@ -70,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .active(true)
                 .build();
 
         Set<Role> roles = new HashSet<>();
@@ -108,29 +109,57 @@ public class AuthServiceImpl implements AuthService {
         User existingUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        // Check if user account is active
+        if (!existingUser.getActive()) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
+        }
+
+        // Check if account is temporarily blocked in Redis
         if (baseRedisService.hashExists(existingUser.getId(), BLOCKED_PREFIX)) {
             throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
         }
+
         if (!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
+            // Handle failed login attempt
             if (baseRedisService.hashExists(existingUser.getId(), fieldKey)) {
                 failedLoginQuantity = (int) baseRedisService.hashGet(existingUser.getId(), fieldKey) + 1;
             } else {
                 failedLoginQuantity = 1;
+                // Set TTL to 5 minutes for the failed login counter
+                baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
             }
+            
             baseRedisService.hashSet(existingUser.getId(), fieldKey, failedLoginQuantity);
+            
             if (failedLoginQuantity >= MAX_FAILED_LOGIN) {
-                baseRedisService.setTimeToLive(existingUser.getId(), LOCK_TIME_MINUTES);
+                // Deactivate user in database after 5 failed attempts within 5 minutes
+                existingUser.setActive(false);
+                userRepository.save(existingUser);
+                
+                // Also block temporarily in Redis
                 baseRedisService.hashSet(existingUser.getId(), BLOCKED_PREFIX, true);
-                throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+                baseRedisService.setTimeToLive(existingUser.getId(), LOCK_TIME_MINUTES);
+                
+                log.warn("User {} has been deactivated due to {} failed login attempts within {} minutes", 
+                        existingUser.getEmail(), MAX_FAILED_LOGIN, LOGIN_TIMEOUT_MINUTES);
+                
+                throw new AppException(ErrorCode.USER_INACTIVE);
             }
+            
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
-        // Đăng nhập thành công
+        
+        // Successful login - clear failed attempts and generate tokens
         baseRedisService.delete(existingUser.getId(), fieldKey);
-        baseRedisService.delete(existingUser.getId(), "locked");
-        baseRedisService.setTimeToLive(existingUser.getId(), LOGIN_TIMEOUT_MINUTES);
+        baseRedisService.delete(existingUser.getId(), BLOCKED_PREFIX);
+        
         String accessToken = generateAccessToken(existingUser);
         String refreshToken = generateRefreshToken(existingUser);
+        
+        // Save refresh token to user
+        existingUser.setRefreshToken(refreshToken);
+        userRepository.save(existingUser);
+        
         return LoginRes.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -308,5 +337,30 @@ public class AuthServiceImpl implements AuthService {
         } catch (ParseException e) {
             throw new AppException(ErrorCode.TOKEN_INVALID);
         }
+    }
+
+    @Override
+    public void reactivateUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        
+        // Reactivate user in database
+        user.setActive(true);
+        userRepository.save(user);
+        
+        // Clear Redis blocks and failed attempts
+        clearFailedLoginAttempts(userId);
+        
+        log.info("User {} has been reactivated by admin", user.getEmail());
+    }
+
+    @Override
+    public void clearFailedLoginAttempts(String userId) {
+        // Clear failed login attempts counter
+        baseRedisService.delete(userId, FAILED_LOGIN_PREFIX);
+        // Clear temporary block
+        baseRedisService.delete(userId, BLOCKED_PREFIX);
+        
+        log.info("Failed login attempts cleared for user ID: {}", userId);
     }
 }

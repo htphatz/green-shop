@@ -34,6 +34,10 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Builder.Default
+    @Column(name = "active")
+    private Boolean active = true;
+
     @ManyToMany
     @JoinTable(
             name = "users_roles",

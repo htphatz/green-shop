@@ -8,7 +8,7 @@ public interface ProductService {
     ProductRes createProduct(ProductReq request);
     ProductRes getProductById(String id);
     ProductRes updateProduct(String id, ProductReq request);
-    PageDto<ProductRes> searchProducts(String keyword, String categoryId, Integer pageNumber, Integer pageSize);
+    PageDto<ProductRes> searchProducts(String keyword, String categoryId, String sortDir, Integer pageNumber, Integer pageSize);
     void deleteProduct(String id);
     PageDto<ProductRes> searchByCustomQuery(Integer pageNumber, Integer pageSize, String sortBy, String keyword);
     PageDto<ProductRes> searchByCriteria(Integer pageNumber, Integer pageSize, String sortBy, String categoryId, String... search);

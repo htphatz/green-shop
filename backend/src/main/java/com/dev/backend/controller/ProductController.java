@@ -31,10 +31,11 @@ public class ProductController {
     public APIResponse<PageDto<ProductRes>> searchProducts(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "categoryId", required = false) String categoryId,
+            @RequestParam(name = "sortDir",defaultValue = "asc") String sortDir,
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
     ) {
-        PageDto<ProductRes> result = productService.searchProducts(keyword, categoryId, pageNumber, pageSize);
+        PageDto<ProductRes> result = productService.searchProducts(keyword, categoryId, sortDir, pageNumber, pageSize);
         return APIResponse.<PageDto<ProductRes>>builder().result(result).build();
     }
 
