@@ -9,8 +9,10 @@ import java.util.Set;
 @Getter
 @Builder
 public class UserRes {
+    private String id;
     private String firstName;
     private String lastName;
     private String email;
+    private Boolean active;
     private Set<Role> roles;
 }
