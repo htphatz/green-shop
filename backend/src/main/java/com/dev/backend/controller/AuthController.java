@@ -64,13 +64,4 @@ public class AuthController {
                 .message("User account has been reactivated successfully")
                 .build();
     }
-
-    @PostMapping("admin/clear-failed-attempts/{userId}")
-    @Operation(summary = "Clear failed login attempts (Admin only)")
-    public APIResponse<Void> clearFailedLoginAttempts(@PathVariable String userId) {
-        authService.clearFailedLoginAttempts(userId);
-        return APIResponse.<Void>builder()
-                .message("Failed login attempts cleared successfully")
-                .build();
-    }
 }
