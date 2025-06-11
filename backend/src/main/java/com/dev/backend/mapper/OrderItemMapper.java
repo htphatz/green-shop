@@ -12,5 +12,6 @@ public interface OrderItemMapper {
     OrderItem toOrderItem(OrderItemReq request);
 
     @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "imageUrl", source = "product.imageUrl")
     OrderItemRes toOrderItemRes(OrderItem orderItem);
 }

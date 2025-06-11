@@ -31,7 +31,7 @@ spring:
 
 jwt:
   signerKey: 1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij
-  duration: 1 #hour
+  duration: 2 #hour
   refresh-duration: 3 #hour
 
 cloudinary:

@@ -38,7 +38,7 @@ public class CategoryController {
     }
 
     @GetMapping("{id}")
-    @Operation(summary = "Create category by id")
+    @Operation(summary = "Get category by id")
     public APIResponse<CategoryRes> getCategoryById(@PathVariable("id") String id) throws JsonProcessingException {
         CategoryRes result = categoryService.getCategoryById(id);
         return APIResponse.<CategoryRes>builder().result(result).build();

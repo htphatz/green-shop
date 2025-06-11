@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 @Builder
 public class OrderItemRes {
     private String productId;
+    private String imageUrl;
     private BigDecimal price;
     private Integer quantity;
     private BigDecimal totalMoney;

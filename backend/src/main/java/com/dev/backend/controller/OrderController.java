@@ -40,7 +40,7 @@ public class OrderController {
     }
 
     @GetMapping("{id}")
-    @Operation(summary = "Create order by id")
+    @Operation(summary = "Get order by id")
     public APIResponse<OrderRes> getOrderById(@PathVariable("id") String id) {
         OrderRes result = orderService.getOrderById(id);
         return APIResponse.<OrderRes>builder().result(result).build();
