@@ -31,6 +31,7 @@ public enum ErrorCode {
     TOKEN_BLACK_LIST(400, "Token in blacklist", HttpStatus.BAD_REQUEST),
     DATE_INVALID(400, "Date invalid", HttpStatus.BAD_REQUEST),
     BANNER_NOT_FOUND(404, "Banner not found", HttpStatus.NOT_FOUND),
+    CANNOT_CANCEL_SHIPPED_ORDER(400, "Cannot cancel shipped order", HttpStatus.BAD_REQUEST),
     ;
 
     private final Integer code;

@@ -14,8 +14,8 @@ public class CategoryReq {
     @NotBlank(message = "Name is required")
     private String name;
 
-    @FileNotEmpty
-    @FileSize(maxSize = 2000000) //bytes
+    // @FileNotEmpty
+    // @FileSize(maxSize = 2000000)
     @FileType(contentType = {"image/png", "image/jpeg", "image/jpg"})
     private MultipartFile fileImage;
 }

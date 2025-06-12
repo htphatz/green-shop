@@ -144,6 +144,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderRes updateOrderStatus(String id, ChangeOrderStatusReq request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() == OrderStatus.SHIPPED
+                    && request.getStatus() == OrderStatus.CANCELED) {
+            throw new AppException(ErrorCode.CANNOT_CANCEL_SHIPPED_ORDER);
+        }
         if (request.getStatus() == OrderStatus.CANCELED) {
             resetQuantity(order);
         }

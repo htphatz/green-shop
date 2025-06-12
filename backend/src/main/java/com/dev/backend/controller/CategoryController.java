@@ -5,7 +5,6 @@ import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.CategoryRes;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.service.CategoryService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,14 +31,14 @@ public class CategoryController {
     public APIResponse<PageDto<CategoryRes>> getCategories(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
-    ) throws JsonProcessingException {
+    ) {
         PageDto<CategoryRes> result = categoryService.getAllCategories(pageNumber, pageSize);
         return APIResponse.<PageDto<CategoryRes>>builder().result(result).build();
     }
 
     @GetMapping("{id}")
     @Operation(summary = "Get category by id")
-    public APIResponse<CategoryRes> getCategoryById(@PathVariable("id") String id) throws JsonProcessingException {
+    public APIResponse<CategoryRes> getCategoryById(@PathVariable("id") String id) {
         CategoryRes result = categoryService.getCategoryById(id);
         return APIResponse.<CategoryRes>builder().result(result).build();
     }
