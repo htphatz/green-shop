@@ -9,8 +9,6 @@ import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.mapper.CategoryMapper;
 import com.dev.backend.repository.CategoryRepository;
 import com.dev.backend.service.CategoryService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,38 +46,26 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryRes getCategoryById(String id) throws JsonProcessingException {
-        String key = String.format("category:%s", id);
-        if (baseRedisService.get(key) == null) {
-            Category category = categoryRepository.findById(id)
-                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-            CategoryRes result = categoryMapper.toCategoryRes(category);
-            String json = objectMapper.writeValueAsString(result);
-            baseRedisService.set(key, json);
-            baseRedisService.setTimeToLive(key, 10L);
-            return result;
-        } else {
-            String json = baseRedisService.get(key);
-            return objectMapper.readValue(json, CategoryRes.class);
-        }
+    public void deleteCategory(String id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        categoryRepository.delete(category);
     }
 
     @Override
-    public PageDto<CategoryRes> getAllCategories(Integer pageNumber, Integer pageSize) throws JsonProcessingException {
-        String key = getKey(pageNumber, pageSize);
-        if (baseRedisService.get(key) == null) {
-            pageNumber--;
-            Pageable pageable = PageRequest.of(pageNumber, pageSize);
-            Page<Category> categories = categoryRepository.findAll(pageable);
-            PageDto<CategoryRes> result = PageDto.of(categories).map(categoryMapper::toCategoryRes);
-            String json = objectMapper.writeValueAsString(result);
-            baseRedisService.set(key, json);
-            baseRedisService.setTimeToLive(key, 10L);
-            return result;
-        } else {
-            String json = baseRedisService.get(key);
-            return objectMapper.readValue(json, new TypeReference<PageDto<CategoryRes>>() {});
-        }
+    public CategoryRes getCategoryById(String id) {
+        Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        return categoryMapper.toCategoryRes(category);
+    }
+
+    @Override
+    public PageDto<CategoryRes> getAllCategories(Integer pageNumber, Integer pageSize) {
+        pageNumber--;
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Category> categories = categoryRepository.findAll(pageable);
+        return PageDto.of(categories).map(categoryMapper::toCategoryRes);
     }
 
     @Override
@@ -87,8 +73,6 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryRes updateCategory(String id, CategoryReq request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        String key = String.format("category:%s", id);
-        baseRedisService.delete(key);
         category.setName(request.getName());
         if (request.getFileImage() != null && !request.getFileImage().isEmpty()) {
             Map data = this.cloudinaryService.upload(request.getFileImage());
@@ -96,9 +80,5 @@ public class CategoryServiceImpl implements CategoryService {
             category.setImageUrl(newImageUrl);
         }
         return categoryMapper.toCategoryRes(categoryRepository.save(category));
-    }
-
-    private String getKey(Integer pageNumber, Integer pageSize) {
-        return String.format("all_categories:%s:%s", pageNumber, pageSize);
     }
 }
