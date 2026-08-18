@@ -1,5 +1,7 @@
 package com.dev.backend.service;
 
+import org.redisson.api.RLock;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,4 +19,7 @@ public interface BaseRedisService <K, F, V> {
     void delete(K key);
     void delete(K key, F field);
     void delete(K key, List<F> fields);
+    void setWithRandomJitter(K key, V value, long baseMinutes, long maxJitterMinutes);
+    void setNullValue(K key, long timeoutInMinutes);
+    RLock getLock(String lockKey);
 }

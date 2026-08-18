@@ -33,6 +33,7 @@
 		<projectlombok-lombok.version>1.18.30</projectlombok-lombok.version>
 		<oauth2-resource-service.version>3.3.4</oauth2-resource-service.version>
 		<redis-client.version>5.2.0</redis-client.version>
+		<redisson.version>3.41.0</redisson.version>
 		<spring-cloud.version>2024.0.0</spring-cloud.version>
 		<maven-plugin.version>3.4.0</maven-plugin.version>
 	</properties>
@@ -99,6 +100,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.redisson</groupId>
+			<artifactId>redisson-spring-boot-starter</artifactId>
+			<version>${redisson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>redis.clients</groupId>

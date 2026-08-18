@@ -2,11 +2,14 @@ package com.dev.backend.service.impl;
 
 import com.dev.backend.service.BaseRedisService;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -14,6 +17,9 @@ import java.util.concurrent.TimeUnit;
 public class BaseRedisServiceImpl<K, F, V> implements BaseRedisService<K, F, V> {
     private final RedisTemplate<K, V> redisTemplate;
     private final HashOperations<K, F, V> hashOperations;
+    private final RedissonClient redissonClient;
+
+    public static final String NULL_SENTINEL = "NULL";
 
     @Override
     public void set(K key, V value) {
@@ -83,5 +89,24 @@ public class BaseRedisServiceImpl<K, F, V> implements BaseRedisService<K, F, V> 
         for (F field : fields) {
             hashOperations.delete(key, field);
         }
+    }
+
+    @Override
+    public void setWithRandomJitter(K key, V value, long baseMinutes, long maxJitterMinutes) {
+        long jitter = ThreadLocalRandom.current().nextLong(0, maxJitterMinutes + 1);
+        long totalMinutes = baseMinutes + jitter;
+        redisTemplate.opsForValue().set(key, value, totalMinutes, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void setNullValue(K key, long timeoutInMinutes) {
+        @SuppressWarnings("unchecked")
+        V nullVal = (V) NULL_SENTINEL;
+        redisTemplate.opsForValue().set(key, nullVal, timeoutInMinutes, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public RLock getLock(String lockKey) {
+        return redissonClient.getLock(lockKey);
     }
 }

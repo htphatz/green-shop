@@ -8,8 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableFeignClients
-@EnableElasticsearchRepositories
-@EnableScheduling
 public class BackendApplication {
 
 	public static void main(String[] args) {

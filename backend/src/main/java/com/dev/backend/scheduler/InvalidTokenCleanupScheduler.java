@@ -1,4 +1,4 @@
-package com.dev.backend.schedule;
+package com.dev.backend.scheduler;
 
 import com.dev.backend.entity.InvalidatedToken;
 import com.dev.backend.repository.InvalidatedTokenRepository;
