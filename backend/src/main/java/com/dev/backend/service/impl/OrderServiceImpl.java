@@ -1,7 +1,6 @@
 package com.dev.backend.service.impl;
 
 import com.dev.backend.dto.event.OrderConfirmEvent;
-import com.dev.backend.dto.event.UpdateInventoryEvent;
 import com.dev.backend.dto.request.ChangeOrderInfoReq;
 import com.dev.backend.dto.request.ChangeOrderStatusReq;
 import com.dev.backend.dto.request.OrderItemReq;
@@ -18,14 +17,13 @@ import com.dev.backend.mapper.OrderMapper;
 import com.dev.backend.repository.*;
 import com.dev.backend.service.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,9 +33,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -113,12 +113,31 @@ public class OrderServiceImpl implements OrderService {
         // kafkaTemplate.send("order-events", objectMapper.writeValueAsString(events));
 
 
-        // Brevo + Kafka
+        // Brevo + Advanced Kafka Producer (Async Callback + Partition Key)
         OrderConfirmEvent orderConfirmEvent = OrderConfirmEvent.builder()
+                .eventId(UUID.randomUUID().toString()) // UUID to prevent duplicates at Consumer (Idempotency)
                 .orderId(newOrder.getId())
                 .email(email)
                 .build();
-        kafkaTemplate.send("order-confirmed", orderConfirmEvent);
+
+        // Key = orderId ensures all events for the same order route to the same Partition
+        String partitionKey = newOrder.getId();
+        kafkaTemplate.send("order-confirmed", partitionKey, orderConfirmEvent)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("Sent OrderConfirmEvent successfully [eventId: {}, orderId: {}] to partition {} with offset {}",
+                                orderConfirmEvent.getEventId(),
+                                newOrder.getId(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset());
+                    } else {
+                        log.error("Failed to send OrderConfirmEvent [eventId: {}, orderId: {}] to Kafka",
+                                orderConfirmEvent.getEventId(),
+                                newOrder.getId(),
+                                ex);
+                        // TODO: Save to DB outbox_log_failed table for automatic retry via CronJob if needed
+                    }
+                });
         /////////////////
 
         return orderMapper.toOrderRes(newOrder);
