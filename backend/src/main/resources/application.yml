@@ -29,6 +29,8 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.trusted.packages: "*"
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URL:http://localhost:9200}
 
 jwt:
   signerKey: 1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij
