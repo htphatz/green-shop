@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("ghn")
 @RequiredArgsConstructor
@@ -60,8 +64,18 @@ public class GHNController {
 
     @GetMapping("fee")
     @Operation(summary = "Get shipping fee")
+    @CircuitBreaker(name = "ghnService", fallbackMethod = "getShippingFeeFallback")
     public APIResponse<Object> getShippingFee(@Valid @RequestBody GHNShippingFeeReq request) {
         Object result = ghnClient.getShippingFee(token, shopId, request);
         return APIResponse.<Object>builder().result(result).build();
+    }
+
+    public APIResponse<Object> getShippingFeeFallback(Throwable throwable) {
+        log.error("GHN Service fallback triggered. Reason: {}", throwable.getMessage());
+        return APIResponse.<Object>builder()
+                .code(200)
+                .message("GHN service is temporarily unavailable. Applied default shipping fee of 30,000 VND.")
+                .result(30000)
+                .build();
     }
 }

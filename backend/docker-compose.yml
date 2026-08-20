@@ -17,8 +17,8 @@ services:
 #      - SECRET_KEY_VNPAY=${SECRET_KEY_VNPAY}
 #      - TOKEN_GHN=${TOKEN_GHN}
 #      - API_KEY_BREVO=${API_KEY_BREVO}
-#      - REDIS_HOST = ${REDIS_HOST}
-#      - KAFKA_SERVER = ${KAFKA_SERVER}
+#      - REDIS_HOST=${REDIS_HOST}
+#      - KAFKA_SERVER=${KAFKA_SERVER}
 #    depends_on:
 #      - mysql
 #      - redis
@@ -162,7 +162,7 @@ services:
     container_name: kibana
     env_file: .env
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS={ELASTICSEARCH_HOSTS}
     ports:
       - "5601:5601"
     depends_on:

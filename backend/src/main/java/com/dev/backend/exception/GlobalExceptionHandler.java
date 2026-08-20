@@ -1,6 +1,8 @@
 package com.dev.backend.exception;
 
 import com.dev.backend.dto.response.APIResponse;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -76,5 +78,25 @@ public class GlobalExceptionHandler {
                 .message(e.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<APIResponse> handleRequestNotPermitted(RequestNotPermitted e) {
+        log.warn("Rate limit exceeded: {}", e.getMessage());
+        APIResponse apiResponse = APIResponse.builder()
+                .code(HttpStatus.TOO_MANY_REQUESTS.value())
+                .message("Too many requests. Please try again later.")
+                .build();
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(apiResponse);
+    }
+
+    @ExceptionHandler(CallNotPermittedException.class)
+    public ResponseEntity<APIResponse> handleCallNotPermittedException(CallNotPermittedException e) {
+        log.error("Circuit breaker OPEN: {}", e.getMessage());
+        APIResponse apiResponse = APIResponse.builder()
+                .code(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .message("Third-party service is temporarily unavailable. Please try again later.")
+                .build();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(apiResponse);
     }
 }

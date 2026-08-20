@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 @RestController
 @RequestMapping("auth")
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class AuthController {
 
     @PostMapping("register")
     @Operation(summary = "Register")
+    @RateLimiter(name = "apiRateLimiter")
     public APIResponse<UserRes> register(@Valid @RequestBody RegisterReq request) {
         UserRes result = authService.register(request);
         return APIResponse.<UserRes>builder().result(result).build();
@@ -31,6 +34,7 @@ public class AuthController {
 
     @PostMapping("login")
     @Operation(summary = "Login")
+    @RateLimiter(name = "apiRateLimiter")
     public APIResponse<LoginRes> login(@Valid @RequestBody LoginReq request) throws KeyLengthException {
         LoginRes result = authService.loginWithRedis(request);
         return APIResponse.<LoginRes>builder().result(result).build();

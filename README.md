@@ -4,9 +4,10 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.8-black.svg)](https://kafka.apache.org/)
 [![Redis](https://img.shields.io/badge/Redis-Redisson-red.svg)](https://redis.io/)
+[![Resilience4j](https://img.shields.io/badge/Resilience4j-2.2.0-red.svg)](https://resilience4j.readme.io/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 
-A high-performance E-Commerce RESTful API backend system built on **Java 21**, **Spring Boot 3.4**, **Apache Kafka (KRaft)**, **Redis (Redisson)**, and **MySQL**. The system is engineered using **Event-Driven Architecture (EDA)** to optimize inventory handling, automated shipping, online payments, and multi-tier caching.
+A high-performance E-Commerce RESTful API backend system built on **Java 21**, **Spring Boot 3.4**, **Apache Kafka (KRaft)**, **Redis (Redisson)**, **Elasticsearch**, **Resilience4j**, and **MySQL**. The system is engineered using **Event-Driven Architecture (EDA)** to optimize inventory handling, automated shipping, online payments, multi-tier caching, and resilience control.
 
 ---
 
@@ -57,6 +58,7 @@ A high-performance E-Commerce RESTful API backend system built on **Java 21**, *
 | **Caching & Locking** | Redis, Redisson 3.41.0, Jedis 5.2.0 |
 | **Message Broker** | Apache Kafka 3.8 (KRaft Mode) |
 | **Security & Auth** | Spring Security 6, OAuth2 Resource Server, Nimbus JWT |
+| **Fault Tolerance** | Resilience4j 2.2.0 (Circuit Breaker, Rate Limiter) |
 | **HTTP Client & Mapper** | Spring Cloud OpenFeign (2024.0.0), MapStruct 1.6.2, Lombok |
 | **Integrations** | Cloudinary (Image), Brevo (Email), VNPay (Payment), GHN (Shipping) |
 | **Tools & Container** | Docker, Docker Compose, Springdoc OpenAPI 2.7 (Swagger) |
@@ -103,6 +105,8 @@ A high-performance E-Commerce RESTful API backend system built on **Java 21**, *
 1. **Cache-Aside Pattern**: Queries Redis before hitting MySQL; uses Redisson Distributed Lock to rebuild cache on miss.
 2. **Write-Back Pattern**: Atomically increments product view counts in Redis Hash (`product:views`) and flushes to MySQL periodically via Cron Scheduler.
 3. **Idempotent Consumer**: Prevents duplicate email dispatches using Redis `SETNX` (7-day TTL).
+4. **Circuit Breaker & Fallback**: Short-circuits failing third-party API calls (GHN Shipping) with a 10-call sliding window and returns flat-rate shipping fee fallback.
+5. **Rate Limiting**: Enforces a 5 req/s sliding window limit on authentication endpoints to prevent brute-force attacks.
 
 ---
 
@@ -219,6 +223,13 @@ docker build -t green-shop-backend:latest .
 - **Cache Breakdown**: Uses Redisson Distributed Locks with Double-Check Locking to ensure single-thread cache rebuilding.
 - **Cache Avalanche**: Applies Random Jitter (10m base TTL + 0-5m random padding) to prevent synchronized expiration.
 - **Kafka Resilience**: Idempotent email processing using Redis `SETNX`, manual offset commits (`MANUAL_IMMEDIATE`), and Dead Letter Topics (`.DLT`) for error recovery.
+- **Fault Tolerance & Rate Limiting**: Employs Resilience4j for sliding-window Circuit Breaking (GHN integration) with 30,000 VND shipping fee fallback, and non-blocking Rate Limiting (5 req/s) on authentication APIs.
+
+### 📚 Detailed Architecture Documentation
+- [Redis Advanced Patterns Guide](file:///c:/workspace/Backend/personal-projects/green-shop/backend/src/main/java/com/dev/backend/docs/redis.md)
+- [Apache Kafka Integration Guide](file:///c:/workspace/Backend/personal-projects/green-shop/backend/src/main/java/com/dev/backend/docs/kafka.md)
+- [Elasticsearch Search Engine Guide](file:///c:/workspace/Backend/personal-projects/green-shop/backend/src/main/java/com/dev/backend/docs/elasticsearch.md)
+- [Resilience4j Fault Tolerance & Rate Limiting Guide](file:///c:/workspace/Backend/personal-projects/green-shop/backend/src/main/java/com/dev/backend/docs/resilience.md)
 
 ---
 

@@ -36,6 +36,8 @@
 		<redisson.version>3.41.0</redisson.version>
 		<spring-cloud.version>2024.0.0</spring-cloud.version>
 		<maven-plugin.version>3.4.0</maven-plugin.version>
+		<maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+		<resilience4j.version>2.2.0</resilience4j.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -122,6 +124,15 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>${resilience4j.version}</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

@@ -83,3 +83,23 @@ ghn:
 brevo:
   api-key: ${API_KEY_BREVO}
   template-id: 1
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ghnService:
+        sliding-window-type: COUNT_BASED # Type of sliding window: COUNT_BASED or TIME_BASED
+        sliding-window-size: 10 # Number of calls in sliding window to record outcomes
+        minimum-number-of-calls: 5 # Min calls required before calculating failure rate
+        failure-rate-threshold: 50 # Failure rate percentage threshold to open circuit (>= 50%)
+        wait-duration-in-open-state: 10s # Wait time in OPEN state before testing HALF-OPEN
+        permitted-number-of-calls-in-half-open-state: 3 # Trial calls permitted in HALF-OPEN state
+        slow-call-rate-threshold: 50 # Slow call rate percentage threshold to open circuit (>= 50%)
+        slow-call-duration-threshold: 2s # Call duration threshold to consider as slow (> 2s)
+
+  ratelimiter:
+    instances:
+      apiRateLimiter:
+        limit-for-period: 5 # Max requests allowed within refresh period
+        limit-refresh-period: 1s # Rate limiter window duration (1 second)
+        timeout-duration: 0ms # Thread wait time when limit reached (0ms = reject immediately)
