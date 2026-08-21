@@ -80,25 +80,37 @@ A high-performance E-Commerce RESTful API backend system built on **Java 21**, *
                                         |
                                         v
                     +---------------------------------------+
+                    |    Resilience4j Rate Limiter (5 req/s)|
+                    +---------------------------------------+
+                                        |
+                                        v
+                    +---------------------------------------+
                     |     Controller -> Service Layer       |
                     +---------------------------------------+
-                     /                  |                  \
-                    /                   |                   \
-                   v                    v                    v
-      +------------------+    +------------------+    +-------------------+
-      |   MySQL (JPA)    |    |   Redis Cache    |    |   Apache Kafka    |
-      |   (Persistent)   |    | (Redisson Lock)  |    |  (Event Producer) |
-      +------------------+    +------------------+    +-------------------+
-                                                                |
-                                                                v
-                                                      +-------------------+
-                                                      |  Kafka Consumers  |
-                                                      +-------------------+
-                                                       /                 \
-                                                      v                   v
-                                      +------------------+     +-------------------+
-                                      | Inventory Update |     | Brevo Email API   |
-                                      +------------------+     +-------------------+
+                      /           |             |          \
+                     /            |             |           \
+                    v             v             v            v
+      +------------------+ +--------------+ +----------+ +-------------------+
+      |   MySQL (JPA)    | | Redis Cache  | | Elastic  | |   Apache Kafka    |
+      |   (Persistent)   | |(Redisson Lock)| | Search   | |  (Event Producer)|
+      +------------------+ +--------------+ +----------+ +-------------------+
+                                                                   |
+                                                                   v
+                                                         +-------------------+
+                                                         |  Kafka Consumers  |
+                                                         +-------------------+
+                                                          /         |        \
+                                                         v          v         v
+                                                +----------+ +-----------+ +---------------+
+                                                | ES Sync  | | Inventory | | Resilience4j  |
+                                                | Consumer | |  Update   | |Circuit Breaker|
+                                                +----------+ +-----------+ +---------------+
+                                                                                  |
+                                                                                  v
+                                                                           +---------------+
+                                                                           |  GHN / Brevo  |
+                                                                           |  / VNPay APIs |
+                                                                           +---------------+
 ```
 
 ### Key Design Patterns
@@ -138,9 +150,10 @@ green-shop/
 
 ## 6. Authentication & Authorization
 
-- **Dual Authentication**: Local Auth (Email/BCrypt Password) + OAuth2 Google.
-- **JWT Mechanism**: Access Token (2h) + Refresh Token (3h) with Revocation Blacklist support.
-- **Brute-Force Protection**: Tracks failed login attempts per email in Redis (`failed_login:<email>`). Temporarily locks accounts for 10 minutes after 5 failures.
+- **JWT Authentication**: Built on Spring Security 6 and OAuth2 Resource Server using HMAC-SHA512 (`MACSigner` / `MACVerifier`) signed JWT tokens (`jwt.signerKey`).
+- **Token Lifetimes**: Access Tokens (2 hours) for stateless authorization and Refresh Tokens (3 hours) saved on the `User` entity for session renewal.
+- **Redis Anti-Brute-Force Lockout**: Tracks failed password attempts in Redis (`failed_login:<userId>`). After 5 failed attempts within 5 minutes (`LOGIN_TIMEOUT_MINUTES = 5`), the user account is deactivated (`active = false`) in MySQL and blocked in Redis for 10 minutes (`LOCK_TIME_MINUTES = 10`). Account reactivation can be executed via `/auth/reactivate/{userId}`.
+- **Role-Based Access Control (RBAC)**: Supports user roles (`ROLE_USER`, `ROLE_ADMIN`) mapped to JWT authorities for fine-grained method-level security (`@EnableMethodSecurity`, `@PreAuthorize`).
 
 ---
 
@@ -164,6 +177,7 @@ green-shop/
 
 ### Environment Template (`backend/.env`)
 ```env
+# Database Configuration (MySQL)
 DBMS_CONNECTION=your_db_connection_url
 DBMS_USERNAME=your_db_username
 DBMS_PASSWORD=your_db_password
@@ -172,14 +186,31 @@ MYSQL_USER=your_mysql_user
 MYSQL_PASSWORD=your_mysql_password
 MYSQL_ROOT_PASSWORD=your_mysql_root_password
 
+# Redis Configuration
 REDIS_HOST=your_redis_host
 REDIS_PORT=your_redis_port
-KAFKA_SERVER=your_kafka_server
 
-API_SECRET_CLOUDINARY=your_cloudinary_secret
-SECRET_KEY_VNPAY=your_vnpay_secret
+# Kafka Configuration (Bitnami Kafka 3.8 KRaft)
+KAFKA_SERVER=your_kafka_server
+KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=your_kafka_controller_quorum_voters
+KAFKA_CFG_LISTENERS=your_kafka_listeners
+KAFKA_CFG_ADVERTISED_LISTENERS=your_kafka_advertised_listeners
+
+# Elasticsearch Configuration
+ELASTICSEARCH_HOSTS=your_elasticsearch_hosts
+ELASTICSEARCH_URL=your_elasticsearch_url
+
+# Cloudinary Configuration
+API_SECRET_CLOUDINARY=your_cloudinary_api_secret
+
+# Payment & External Services
+SECRET_KEY_VNPAY=your_vnpay_secret_key
 TOKEN_GHN=your_ghn_token
 API_KEY_BREVO=your_brevo_api_key
+
+# Application Server URLs
+API_SERVER_URL=your_api_server_url
+PAYMENT_RETURN_URL=your_payment_return_url
 ```
 
 ### Execution Steps
@@ -235,6 +266,7 @@ docker build -t green-shop-backend:latest .
 
 ## 12. Future Improvements
 
-- [ ] Full-text search expansion using ElasticSearch index.
+- [ ] Transactional Outbox Pattern with Debezium CDC for guaranteed zero event loss.
 - [ ] Microservices decomposition (Auth, Order, Catalog, Notification services).
-- [ ] JVM, Redis, and Kafka metrics monitoring with Prometheus & Grafana.
+- [ ] JVM, Redis, Kafka, and Elasticsearch metrics monitoring with Prometheus & Grafana dashboards.
+- [ ] OpenTelemetry distributed tracing (Zipkin / Jaeger integration).
