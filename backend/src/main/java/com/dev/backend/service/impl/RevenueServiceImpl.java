@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import com.dev.backend.exception.AppException;
 import com.dev.backend.exception.ErrorCode;
 import com.dev.backend.repository.OrderItemRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.response.RevenueRes;
