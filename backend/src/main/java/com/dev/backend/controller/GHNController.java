@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,21 +41,21 @@ public class GHNController {
         return APIResponse.<Object>builder().result(result).build();
     }
 
-    @GetMapping("district")
+    @PostMapping("district")
     @Operation(summary = "Get all districts by province's id")
     public APIResponse<Object> getDistrict(@Valid @RequestBody DistrictReq request) {
         Object result = ghnClient.getDistrict(token, request);
         return APIResponse.<Object>builder().result(result).build();
     }
 
-    @GetMapping("ward")
+    @PostMapping("ward")
     @Operation(summary = "Get all wards by district's id")
     public APIResponse<Object> getWard(@Valid @RequestBody WardReq request) {
         Object result = ghnClient.getWard(token, request);
         return APIResponse.<Object>builder().result(result).build();
     }
 
-    @GetMapping("service")
+    @PostMapping("service")
     @Operation(summary = "Get service")
     public APIResponse<Object> getService(@Valid @RequestBody GHNServiceReq request) {
         request.setShopId(shopId);
@@ -62,7 +63,7 @@ public class GHNController {
         return APIResponse.<Object>builder().result(result).build();
     }
 
-    @GetMapping("fee")
+    @PostMapping("fee")
     @Operation(summary = "Get shipping fee")
     @CircuitBreaker(name = "ghnService", fallbackMethod = "getShippingFeeFallback")
     public APIResponse<Object> getShippingFee(@Valid @RequestBody GHNShippingFeeReq request) {

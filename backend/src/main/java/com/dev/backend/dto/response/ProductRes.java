@@ -16,4 +16,5 @@ public class ProductRes {
     private Integer quantity;
     private Integer soldQuantity;
     private CategoryRes category;
+    private Long viewCount;
 }

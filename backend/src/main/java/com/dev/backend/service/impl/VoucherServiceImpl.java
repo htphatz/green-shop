@@ -67,6 +67,8 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public void deleteByCode(String code) {
-        voucherRepository.deleteById(code);
+        Voucher voucher = voucherRepository.findByCode(code)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+        voucherRepository.delete(voucher);
     }
 }

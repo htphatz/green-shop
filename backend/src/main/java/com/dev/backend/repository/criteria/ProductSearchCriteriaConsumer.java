@@ -21,15 +21,29 @@ public class ProductSearchCriteriaConsumer implements Consumer<SearchCriteria> {
 
     @Override
     public void accept(SearchCriteria param) {
-        if (param.getOperation().equals(">")) {
-            builder.and(predicate, builder.greaterThanOrEqualTo(root.get(param.getKey()), root.get(param.getValue().toString())));
-        } else if (param.getOperation().equals("<")) {
-            builder.and(predicate, builder.lessThanOrEqualTo(root.get(param.getKey()), root.get(param.getValue().toString())));
-        } else {
-            if (root.get(param.getKey()).getJavaType() == String.class) {
-                builder.and(predicate, builder.like(root.get(param.getKey()), "%" + root.get(param.getValue().toString()) + "%"));
+        String key = param.getKey();
+        String op = param.getOperation();
+        String valStr = param.getValue() != null ? param.getValue().toString() : "";
+
+        Class<?> fieldType = root.get(key).getJavaType();
+
+        if (">".equals(op)) {
+            if (Number.class.isAssignableFrom(fieldType) || fieldType.isPrimitive()) {
+                predicate = builder.and(predicate, builder.ge(root.get(key), new java.math.BigDecimal(valStr)));
             } else {
-                builder.and(predicate, builder.equal(root.get(param.getKey()), root.get(param.getValue().toString())));
+                predicate = builder.and(predicate, builder.greaterThanOrEqualTo(root.get(key), valStr));
+            }
+        } else if ("<".equals(op)) {
+            if (Number.class.isAssignableFrom(fieldType) || fieldType.isPrimitive()) {
+                predicate = builder.and(predicate, builder.le(root.get(key), new java.math.BigDecimal(valStr)));
+            } else {
+                predicate = builder.and(predicate, builder.lessThanOrEqualTo(root.get(key), valStr));
+            }
+        } else {
+            if (fieldType == String.class) {
+                predicate = builder.and(predicate, builder.like(builder.lower(root.get(key)), "%" + valStr.toLowerCase() + "%"));
+            } else {
+                predicate = builder.and(predicate, builder.equal(root.get(key), param.getValue()));
             }
         }
     }

@@ -16,11 +16,17 @@ public class ProductElasticConsumer {
     private final ProductElasticRepository productElasticRepository;
     private final ObjectMapper objectMapper;
 
-    /** Listen to product update/delete events from Kafka and synchronize to Elasticsearch asynchronously **/
     @KafkaListener(topics = "product-sync-topic", groupId = "es-product-sync-group")
-    public void handleProductSync(String message) {
+    public void handleProductSync(Object message, org.springframework.kafka.support.Acknowledgment ack) {
         try {
-            ProductSyncEvent event = objectMapper.readValue(message, ProductSyncEvent.class);
+            ProductSyncEvent event;
+            if (message instanceof ProductSyncEvent pe) {
+                event = pe;
+            } else if (message instanceof String str) {
+                event = objectMapper.readValue(str, ProductSyncEvent.class);
+            } else {
+                event = objectMapper.convertValue(message, ProductSyncEvent.class);
+            }
             log.info("Processing ES Sync Event: type={}, id={}", event.getEventType(), event.getProductId());
 
             if (event.getEventType() == ProductSyncEvent.EventType.DELETE) {
@@ -39,9 +45,11 @@ public class ProductElasticConsumer {
                         .build();
                 productElasticRepository.save(doc);
             }
+            if (ack != null) {
+                ack.acknowledge();
+            }
         } catch (Exception e) {
             log.error("Failed to process ES sync event for message: {}", message, e);
-            // Optional: Publish failed messages to Dead Letter Queue (DLQ)
         }
     }
 }

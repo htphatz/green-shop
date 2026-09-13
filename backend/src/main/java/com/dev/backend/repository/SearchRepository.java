@@ -36,8 +36,8 @@ public class SearchRepository {
 
         StringBuilder sqlQuery = new StringBuilder("SELECT p FROM Product p WHERE 1=1");
         if (StringUtils.hasLength(keyword)) {
-            sqlQuery.append(" AND LOWER(p.name) LIKE LOWER(:name)");
-            sqlQuery.append(" OR LOWER(p.description) LIKE LOWER(:description)");
+            sqlQuery.append(" AND (LOWER(p.name) LIKE LOWER(:name)");
+            sqlQuery.append(" OR LOWER(p.description) LIKE LOWER(:description))");
         }
 
         if (StringUtils.hasLength(sortBy)) {
@@ -50,34 +50,33 @@ public class SearchRepository {
         }
 
         // Get list of Product
-        Query selectQuery = entityManager.createQuery(sqlQuery.toString());
+        Query selectQuery = entityManager.createQuery(sqlQuery.toString(), Product.class);
         if (StringUtils.hasLength(keyword)) {
             selectQuery.setParameter("name", String.format(LIKE_FORMAT, keyword));
             selectQuery.setParameter("description", String.format(LIKE_FORMAT, keyword));
         }
-        selectQuery.setFirstResult(pageNumber);
+        int offset = Math.max(0, (pageNumber - 1) * pageSize);
+        selectQuery.setFirstResult(offset);
         selectQuery.setMaxResults(pageSize);
         List<Product> products = (List<Product>) selectQuery.getResultList();
 
         // Count Product
-        StringBuilder sqlCountQuery = new StringBuilder("SELECT COUNT(*) FROM Product p");
+        StringBuilder sqlCountQuery = new StringBuilder("SELECT COUNT(p) FROM Product p WHERE 1=1");
         if (StringUtils.hasLength(keyword)) {
-            sqlCountQuery.append(" WHERE LOWER(p.name) LIKE LOWER(?1)");
-            sqlCountQuery.append(" OR LOWER(p.description) LIKE LOWER(?2)");
+            sqlCountQuery.append(" AND (LOWER(p.name) LIKE LOWER(:name)");
+            sqlCountQuery.append(" OR LOWER(p.description) LIKE LOWER(:description))");
         }
 
-        Query countQuery = entityManager.createQuery(sqlCountQuery.toString());
+        Query countQuery = entityManager.createQuery(sqlCountQuery.toString(), Long.class);
         if (StringUtils.hasLength(keyword)) {
-            countQuery.setParameter(1, String.format(LIKE_FORMAT, keyword));
-            countQuery.setParameter(2, String.format(LIKE_FORMAT, keyword));
-            countQuery.getSingleResult();
+            countQuery.setParameter("name", String.format(LIKE_FORMAT, keyword));
+            countQuery.setParameter("description", String.format(LIKE_FORMAT, keyword));
         }
 
         Long totalElements = (Long) countQuery.getSingleResult();
         log.info("totalElements={}", totalElements);
 
-        pageNumber--;
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable = PageRequest.of(Math.max(0, pageNumber - 1), pageSize);
         return new PageImpl<>(products, pageable, totalElements);
     }
 
@@ -95,20 +94,10 @@ public class SearchRepository {
             }
         }
 
-//        if (StringUtils.hasLength(sortBy)) {
-//            // price:asc|desc
-//            Pattern pattern = Pattern.compile(SORT_BY);
-//            Matcher matcher = pattern.matcher(sortBy);
-//            if (matcher.find()) {
-//                criteriaList.add(new SearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3)));
-//            }
-//        }
-
         List<Product> products = getProducts(pageNumber, pageSize, sortBy, categoryId, criteriaList);
-        Long totalElements = getTotalElements(criteriaList);
+        Long totalElements = getTotalElements(categoryId, criteriaList);
 
-        pageNumber--;
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable = PageRequest.of(Math.max(0, pageNumber - 1), pageSize);
         return new PageImpl<>(products, pageable, totalElements);
     }
 
@@ -120,18 +109,16 @@ public class SearchRepository {
         // Xử lý điều kiện tìm kiếm
         Predicate predicate = builder.conjunction();
         ProductSearchCriteriaConsumer consumer = new ProductSearchCriteriaConsumer(builder, predicate, root);
+        criteriaList.forEach(consumer);
+        predicate = consumer.getPredicate();
 
         // Xử lý Product join Category
         if (StringUtils.hasLength(categoryId)) {
             Join<Category, Product> categoryProductJoin = root.join("category");
             Predicate categoryPredicate = builder.equal(categoryProductJoin.get("id"), categoryId);
-            // Tự xử lý các thuộc tính khác của Category (nếu có)
-            query.where(predicate, categoryPredicate);
-        } else {
-            criteriaList.forEach(consumer);
-            predicate = consumer.getPredicate();
-            query.where(predicate);
+            predicate = builder.and(predicate, categoryPredicate);
         }
+        query.where(predicate);
 
         // Xử lý sắp xếp
         if (StringUtils.hasLength(sortBy)) {
@@ -148,13 +135,14 @@ public class SearchRepository {
             }
         }
 
+        int offset = Math.max(0, (pageNumber - 1) * pageSize);
         return entityManager.createQuery(query)
-                .setFirstResult(pageNumber)
+                .setFirstResult(offset)
                 .setMaxResults(pageSize)
                 .getResultList();
     }
 
-    private Long getTotalElements(List<SearchCriteria> criteriaList) {
+    private Long getTotalElements(String categoryId, List<SearchCriteria> criteriaList) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
         Root<Product> root = query.from(Product.class);
@@ -163,6 +151,13 @@ public class SearchRepository {
         ProductSearchCriteriaConsumer consumer = new ProductSearchCriteriaConsumer(builder, predicate, root);
         criteriaList.forEach(consumer);
         predicate = consumer.getPredicate();
+
+        if (StringUtils.hasLength(categoryId)) {
+            Join<Category, Product> categoryProductJoin = root.join("category");
+            Predicate categoryPredicate = builder.equal(categoryProductJoin.get("id"), categoryId);
+            predicate = builder.and(predicate, categoryPredicate);
+        }
+
         query.select(builder.count(root));
         query.where(predicate);
 

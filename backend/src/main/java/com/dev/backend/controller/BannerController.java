@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class BannerController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create banner")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<BannerRes> createBanner(@Valid BannerReq request) {
         BannerRes result = bannerService.createBanner(request);
         return APIResponse.<BannerRes>builder().result(result).build();
@@ -45,6 +47,7 @@ public class BannerController {
 
     @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Update banner")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<BannerRes> updateBanner(@PathVariable("id") String id, @Valid BannerReq request) {
         BannerRes result = bannerService.updateBanner(id, request);
         return APIResponse.<BannerRes>builder().result(result).build();
@@ -52,6 +55,7 @@ public class BannerController {
 
     @DeleteMapping("{id}")
     @Operation(summary = "Delete banner")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<Void> deleteBanner(@PathVariable("id") String id) {
         bannerService.deleteBanner(id);
         return APIResponse.<Void>builder().build();

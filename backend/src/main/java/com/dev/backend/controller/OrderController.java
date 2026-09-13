@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class OrderController {
 
     @PostMapping
     @Operation(summary = "Create order")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<OrderRes> createOrder(@Valid @RequestBody OrderReq request) throws JsonProcessingException {
         OrderRes result = orderService.createOrder(request);
         return APIResponse.<OrderRes>builder().result(result).build();
@@ -31,6 +33,7 @@ public class OrderController {
 
     @GetMapping
     @Operation(summary = "Get all orders")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<PageDto<OrderRes>> getAllOrders(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
@@ -41,6 +44,7 @@ public class OrderController {
 
     @GetMapping("{id}")
     @Operation(summary = "Get order by id")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<OrderRes> getOrderById(@PathVariable("id") String id) {
         OrderRes result = orderService.getOrderById(id);
         return APIResponse.<OrderRes>builder().result(result).build();
@@ -48,6 +52,7 @@ public class OrderController {
 
     @PutMapping("status/{id}")
     @Operation(summary = "Update order's status")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<OrderRes> updateOrderStatus(@Valid @PathVariable("id") String id, @Valid @RequestBody ChangeOrderStatusReq request) {
         OrderRes result = orderService.updateOrderStatus(id, request);
         return APIResponse.<OrderRes>builder().result(result).build();
@@ -55,6 +60,7 @@ public class OrderController {
 
     @PutMapping("info/{id}")
     @Operation(summary = "Update order's info")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<OrderRes> updateOrderInfo(@PathVariable("id") String id, @Valid @RequestBody ChangeOrderInfoReq request) {
         OrderRes result = orderService.updateOrderInfo(id, request);
         return APIResponse.<OrderRes>builder().result(result).build();
@@ -62,6 +68,7 @@ public class OrderController {
 
     @GetMapping("my-orders")
     @Operation(summary = "Get my order")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<PageDto<OrderRes>> getMyOrders(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
@@ -72,6 +79,7 @@ public class OrderController {
 
     @GetMapping("search")
     @Operation(summary = "Search orders")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<PageDto<OrderRes>> searchOrders(
             @RequestParam(name = "status", required = false) OrderStatus status,
             @RequestParam(name = "userId", required = false) String userId,
@@ -84,6 +92,7 @@ public class OrderController {
 
     @DeleteMapping("{id}")
     @Operation(summary = "Delete order")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<Void> deleteOrder(@PathVariable("id") String id) {
         orderService.deleteOrder(id);
         return APIResponse.<Void>builder().build();

@@ -9,17 +9,19 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("vouchers")
 @RequiredArgsConstructor
-@Tag(name = "Voucher APIs test CI/CD")
+@Tag(name = "Voucher APIs")
 public class VoucherController {
     private final VoucherService voucherService;
 
     @PostMapping
     @Operation(summary = "Create voucher")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<VoucherRes> createVoucher(@Valid @RequestBody VoucherReq request) {
         VoucherRes result = voucherService.createVoucher(request);
         return APIResponse.<VoucherRes>builder().result(result).build();
@@ -27,6 +29,7 @@ public class VoucherController {
 
     @GetMapping
     @Operation(summary = "Get all vouchers")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<PageDto<VoucherRes>> getAllVouchers(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize
@@ -36,7 +39,8 @@ public class VoucherController {
     }
 
     @GetMapping("{code}")
-    @Operation(summary = "Create voucher by code")
+    @Operation(summary = "Get voucher by code")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<VoucherRes> getVoucherByCode(@PathVariable("code") String code) {
         VoucherRes result = voucherService.findByCode(code);
         return APIResponse.<VoucherRes>builder().result(result).build();
@@ -44,6 +48,7 @@ public class VoucherController {
 
     @PutMapping("{code}")
     @Operation(summary = "Update voucher")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<VoucherRes> updateVoucher(@PathVariable("code") String code, @Valid @RequestBody VoucherReq request) {
         VoucherRes result = voucherService.updateVoucher(code, request);
         return APIResponse.<VoucherRes>builder().result(result).build();
@@ -51,6 +56,7 @@ public class VoucherController {
 
     @DeleteMapping("{code}")
     @Operation(summary = "Delete voucher")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<Void> deleteVoucher(@PathVariable("code") String code) {
         voucherService.deleteByCode(code);
         return APIResponse.<Void>builder().build();

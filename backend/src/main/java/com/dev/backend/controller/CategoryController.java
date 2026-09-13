@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class CategoryController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create category")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<CategoryRes> createCategory(@Valid CategoryReq request) {
         CategoryRes result = categoryService.createCategory(request);
         return APIResponse.<CategoryRes>builder().result(result).build();
@@ -45,6 +47,7 @@ public class CategoryController {
 
     @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Update category")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<CategoryRes> updateCategory(@PathVariable("id") String id, @Valid CategoryReq request) {
         CategoryRes result = categoryService.updateCategory(id, request);
         return APIResponse.<CategoryRes>builder().result(result).build();

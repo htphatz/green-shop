@@ -1,5 +1,6 @@
 package com.dev.backend.service.impl;
 
+import com.dev.backend.dto.event.ProductSyncEvent;
 import com.dev.backend.dto.request.ProductReq;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.ProductRes;
@@ -13,10 +14,12 @@ import com.dev.backend.repository.ProductRepository;
 import com.dev.backend.repository.SearchRepository;
 import com.dev.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +27,14 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final SearchRepository searchRepository;
     private final CloudinaryService cloudinaryService;
     private final ProductMapper productMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Value("${resource.defaultImage}")
     private String defaultImage;
@@ -49,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
             product.setImageUrl(imageUrl);
         }
         Product newProduct = productRepository.save(product);
+        sendProductSyncEvent(newProduct, ProductSyncEvent.EventType.CREATE);
         return productMapper.toProductRes(newProduct);
     }
 
@@ -80,7 +86,9 @@ public class ProductServiceImpl implements ProductService {
                 String newImageUrl = (String) data.get("secure_url");
                 product.setImageUrl(newImageUrl);
             }
-            return productMapper.toProductRes(productRepository.save(product));
+            Product savedProduct = productRepository.save(product);
+            sendProductSyncEvent(savedProduct, ProductSyncEvent.EventType.UPDATE);
+            return productMapper.toProductRes(savedProduct);
         }
         return null;
     }
@@ -97,6 +105,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
+        sendProductSyncDeleteEvent(id);
     }
 
     @Override
@@ -109,5 +118,39 @@ public class ProductServiceImpl implements ProductService {
     public PageDto<ProductRes> searchByCriteria(Integer pageNumber, Integer pageSize, String sortBy, String categoryId, String... search) {
         Page<Product> products = searchRepository.searchByCriteria(pageNumber, pageSize, sortBy, categoryId, search);
         return PageDto.of(products).map(productMapper::toProductRes);
+    }
+
+    private void sendProductSyncEvent(Product product, ProductSyncEvent.EventType eventType) {
+        try {
+            ProductSyncEvent event = ProductSyncEvent.builder()
+                    .eventType(eventType)
+                    .productId(product.getId())
+                    .name(product.getName())
+                    .price(product.getPrice())
+                    .description(product.getDescription())
+                    .quantity(product.getQuantity())
+                    .soldQuantity(product.getSoldQuantity())
+                    .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
+                    .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                    .imageUrl(product.getImageUrl())
+                    .build();
+            kafkaTemplate.send("product-sync-topic", product.getId(), event);
+            log.info("Sent ProductSyncEvent [type: {}, productId: {}] to Kafka", eventType, product.getId());
+        } catch (Exception e) {
+            log.error("Failed to send ProductSyncEvent for productId: {}", product.getId(), e);
+        }
+    }
+
+    private void sendProductSyncDeleteEvent(String productId) {
+        try {
+            ProductSyncEvent event = ProductSyncEvent.builder()
+                    .eventType(ProductSyncEvent.EventType.DELETE)
+                    .productId(productId)
+                    .build();
+            kafkaTemplate.send("product-sync-topic", productId, event);
+            log.info("Sent ProductSyncEvent [DELETE, productId: {}] to Kafka", productId);
+        } catch (Exception e) {
+            log.error("Failed to send ProductSyncDeleteEvent for productId: {}", productId, e);
+        }
     }
 }

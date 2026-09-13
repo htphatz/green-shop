@@ -13,6 +13,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
+import com.dev.backend.service.ProductElasticSearchService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -21,7 +22,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductElasticSearchServiceImpl {
+public class ProductElasticSearchServiceImpl implements ProductElasticSearchService {
     private final ElasticsearchOperations elasticsearchOperations;
 
     /** Multi-field Full-Text Search with Relevancy Boosting, Fuzzy Tolerance, Filters & Dynamic Aggregations **/

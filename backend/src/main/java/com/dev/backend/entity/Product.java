@@ -44,4 +44,8 @@ public class Product extends BaseEntity {
     @Version
     @Column(name = "version")
     private Integer version;
+
+    @Column(name = "view_count")
+    @Builder.Default
+    private Long viewCount = 0L;
 }

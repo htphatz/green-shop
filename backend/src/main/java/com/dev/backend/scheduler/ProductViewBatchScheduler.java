@@ -38,8 +38,9 @@ public class ProductViewBatchScheduler {
             Long incrementValue = Long.parseLong(entry.getValue().toString());
 
             productRepository.findById(productId).ifPresent(product -> {
-                // Perform batch view count updates to DB
                 log.info("Syncing Product ID: {} with +{} views to Database", productId, incrementValue);
+                product.setViewCount((product.getViewCount() != null ? product.getViewCount() : 0L) + incrementValue);
+                productRepository.save(product);
                 // Remove synced entry from Redis Hash
                 redisTemplate.opsForHash().delete(VIEW_COUNT_HASH_KEY, productId);
             });

@@ -1,5 +1,6 @@
 package com.dev.backend.controller;
 
+import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.entity.District;
 import com.dev.backend.entity.Province;
 import com.dev.backend.entity.Ward;
@@ -24,19 +25,22 @@ public class AddressController {
 
     @GetMapping("province")
     @Operation(summary = "Get all provinces")
-    public List<Province> getAllProvince() throws JsonProcessingException {
-        return addressService.getAllProvinces();
+    public APIResponse<List<Province>> getAllProvince() throws JsonProcessingException {
+        List<Province> result = addressService.getAllProvinces();
+        return APIResponse.<List<Province>>builder().result(result).build();
     }
 
     @GetMapping("district")
     @Operation(summary = "Get all districts by province's id")
-    public List<District> getDistrictByProvinceId(@RequestParam("provinceId") Integer provinceId) throws JsonProcessingException {
-        return addressService.getByProvinceId(provinceId);
+    public APIResponse<List<District>> getDistrictByProvinceId(@RequestParam("provinceId") Integer provinceId) throws JsonProcessingException {
+        List<District> result = addressService.getByProvinceId(provinceId);
+        return APIResponse.<List<District>>builder().result(result).build();
     }
 
     @GetMapping("ward")
     @Operation(summary = "Get all wards by district's id")
-    public List<Ward> getWardByDistrictId(@RequestParam("districtId") Integer districtId) throws JsonProcessingException {
-        return addressService.getByDistrictId(districtId);
+    public APIResponse<List<Ward>> getWardByDistrictId(@RequestParam("districtId") Integer districtId) throws JsonProcessingException {
+        List<Ward> result = addressService.getByDistrictId(districtId);
+        return APIResponse.<List<Ward>>builder().result(result).build();
     }
 }

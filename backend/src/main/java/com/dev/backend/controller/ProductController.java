@@ -1,16 +1,23 @@
 package com.dev.backend.controller;
 
+import com.dev.backend.document.ProductDocument;
 import com.dev.backend.dto.request.ProductReq;
 import com.dev.backend.dto.response.APIResponse;
 import com.dev.backend.dto.response.PageDto;
 import com.dev.backend.dto.response.ProductRes;
+import com.dev.backend.service.ProductElasticSearchService;
 import com.dev.backend.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("products")
@@ -18,9 +25,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Product APIs")
 public class ProductController {
     private final ProductService productService;
+    private final ProductElasticSearchService productElasticSearchService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create product")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<ProductRes> createProduct(@Valid ProductReq request) {
         ProductRes result = productService.createProduct(request);
         return APIResponse.<ProductRes>builder().result(result).build();
@@ -48,6 +57,7 @@ public class ProductController {
 
     @PutMapping(value = "{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Update product")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<ProductRes> updateCategory(@PathVariable("id") String id, @Valid ProductReq request) {
         ProductRes result = productService.updateProduct(id, request);
         return APIResponse.<ProductRes>builder().result(result).build();
@@ -55,6 +65,7 @@ public class ProductController {
 
     @DeleteMapping(value = "/{id}")
     @Operation(summary = "Delete product")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<Void> deleteProduct(@PathVariable("id") String id) {
         productService.deleteProduct(id);
         return APIResponse.<Void>builder().build();
@@ -83,5 +94,28 @@ public class ProductController {
     ) {
         PageDto<ProductRes> result = productService.searchByCriteria(pageNumber, pageSize, sortBy, category, search);
         return APIResponse.<PageDto<ProductRes>>builder().result(result).build();
+    }
+
+    @GetMapping("search-es")
+    @Operation(summary = "Full-text search products via Elasticsearch")
+    public APIResponse<SearchPage<ProductDocument>> searchProductsES(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "categoryId", required = false) String categoryId,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", required = false, defaultValue = "name.keyword") String sortBy,
+            @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir
+    ) {
+        SearchPage<ProductDocument> result = productElasticSearchService.searchProducts(keyword, categoryId, minPrice, maxPrice, page, size, sortBy, sortDir);
+        return APIResponse.<SearchPage<ProductDocument>>builder().result(result).build();
+    }
+
+    @GetMapping("autocomplete")
+    @Operation(summary = "Product autocomplete suggestions")
+    public APIResponse<List<String>> autocompleteSuggestions(@RequestParam("prefix") String prefix) {
+        List<String> result = productElasticSearchService.autocompleteSuggestions(prefix);
+        return APIResponse.<List<String>>builder().result(result).build();
     }
 }

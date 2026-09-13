@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class UserController {
 
     @GetMapping("me")
     @Operation(summary = "Get my info")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<UserRes> getCurrentInformation() {
         UserRes result = userService.getMyInfo();
         return APIResponse.<UserRes>builder().result(result).build();
@@ -28,6 +30,7 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Get all users")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<PageDto<UserRes>> getAllUsers(
             @RequestParam(name = "pageNumber", required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
@@ -37,6 +40,7 @@ public class UserController {
 
     @GetMapping("{id}")
     @Operation(summary = "Get user by id")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<UserRes> getUserById(@PathVariable("id") String id) {
         UserRes result = userService.getUserById(id);
         return APIResponse.<UserRes>builder().result(result).build();
@@ -44,6 +48,7 @@ public class UserController {
 
     @PostMapping("update-info")
     @Operation(summary = "Update information of the current user")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<UserRes> updateInfo(@Valid @RequestBody UpdateUserInfoReq request) {
         UserRes result = userService.updateMyInfo(request);
         return APIResponse.<UserRes>builder().result(result).build();
@@ -51,6 +56,7 @@ public class UserController {
 
     @PostMapping("change-password")
     @Operation(summary = "Change password of the current user")
+    @PreAuthorize("isAuthenticated()")
     public APIResponse<Void> changePassword(@Valid @RequestBody ChangePasswordReq request) {
         userService.changePassword(request);
         return APIResponse.<Void>builder().build();
